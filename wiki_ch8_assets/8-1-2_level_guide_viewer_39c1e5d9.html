@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>レベル別ガイド ステップ表示｜AIキャンプ</title>
+<style>
+  :root {
+    --navy: #002060;
+    --accent: #2563eb;
+    --bg: #f8fafc;
+    --text: #0f172a;
+    --muted: #64748b;
+    --border: #e2e8f0;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+  }
+  .wrap {
+    padding: 16px 20px 20px;
+    max-width: 960px;
+    margin: 0 auto;
+  }
+  .brand {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+  h1 {
+    margin: 0 0 6px;
+    font-size: 18px;
+    color: var(--navy);
+    line-height: 1.4;
+  }
+  .lead {
+    margin: 0 0 14px;
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  .stage {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 12px;
+  }
+  .stage img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .nav-btn {
+    border: 2px solid var(--border);
+    background: #fff;
+    color: var(--text);
+    border-radius: 10px;
+    padding: 10px 16px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .nav-btn:hover:not(:disabled) {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .nav-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+  .nav-btn.primary {
+    background: var(--navy);
+    border-color: var(--navy);
+    color: #fff;
+  }
+  .nav-btn.primary:hover:not(:disabled) {
+    background: #1e3a8a;
+    border-color: #1e3a8a;
+    color: #fff;
+  }
+
+  .step-info {
+    flex: 1 1 200px;
+    min-width: 0;
+  }
+  .step-count {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--muted);
+    margin-bottom: 2px;
+  }
+  .step-label {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--navy);
+    line-height: 1.4;
+  }
+
+  .dots {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    justify-content: center;
+    width: 100%;
+    margin-top: 2px;
+  }
+  .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    border: none;
+    padding: 0;
+    background: #cbd5e1;
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.15s ease;
+  }
+  .dot:hover { background: #94a3b8; }
+  .dot.active {
+    background: var(--navy);
+    transform: scale(1.15);
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">AIキャンプ｜8-1-2</div>
+  <h1>AIに伝わる情報設計のレベル別ガイド</h1>
+  <p class="lead">「次へ」ボタンで、図が少しずつ埋まっていく流れを確認できます。</p>
+
+  <div class="controls">
+    <button type="button" class="nav-btn" id="prevBtn" aria-label="前のステップ">◀ 前へ</button>
+    <div class="step-info">
+      <div class="step-count" id="stepCount">ステップ 1 / 6</div>
+      <div class="step-label" id="stepLabel">レベル0：会話がかみ合わない</div>
+    </div>
+    <button type="button" class="nav-btn primary" id="nextBtn" aria-label="次のステップ">次へ ▶</button>
+    <div class="dots" id="dots" role="tablist" aria-label="ステップ選択"></div>
+  </div>
+
+  <div class="stage">
+    <img id="slideImg" src="8-1-2_1_85ea703f.png" alt="レベル0：会話がかみ合わない">
+  </div>
+</div>
+
+<script>
+(function () {
+  var STEPS = [
+    {
+      src: '8-1-2_1_85ea703f.png',
+      alt: 'レベル0：会話がかみ合わない',
+      label: 'レベル0：会話がかみ合わない'
+    },
+    {
+      src: '8-1-2_2_3a89801c.png',
+      alt: 'レベル1：背景文脈を追加',
+      label: 'レベル1：背景文脈を追加'
+    },
+    {
+      src: '8-1-2_3_1f6c3712.png',
+      alt: '課題：情報伝達が大変',
+      label: '課題：情報伝達が大変'
+    },
+    {
+      src: '8-1-2_4_60cc7b2d.png',
+      alt: 'レベル2：AIに情報を持たせる',
+      label: 'レベル2：AIに情報を持たせる'
+    },
+    {
+      src: '8-1-2_5_0c23b59e.png',
+      alt: '課題：情報過多でAIの精度が低下',
+      label: '課題：情報過多でAIの精度が低下'
+    },
+    {
+      src: '8-1-2_6_45e5f705.png',
+      alt: 'レベル3：データを整備（全体像）',
+      label: 'レベル3：データを整備（全体像）'
+    }
+  ];
+
+  var current = 0;
+  var slideImg = document.getElementById('slideImg');
+  var stepCount = document.getElementById('stepCount');
+  var stepLabel = document.getElementById('stepLabel');
+  var prevBtn = document.getElementById('prevBtn');
+  var nextBtn = document.getElementById('nextBtn');
+  var dotsEl = document.getElementById('dots');
+
+  function resolveSrc(filename) {
+    try {
+      if (window.parent && window.parent !== window) {
+        var el = window.parent.document.querySelector('[data-step-img="' + filename + '"]');
+        if (el && el.src) return el.src;
+      }
+    } catch (e) {}
+    return filename;
+  }
+
+  function sha1Hex8(text) {
+    function rotateLeft(n, s) {
+      return (n << s) | (n >>> (32 - s));
+    }
+    function toHex(val) {
+      var s = '';
+      for (var i = 7; i >= 0; i--) {
+        s += ((val >>> (i * 4)) & 0x0f).toString(16);
+      }
+      return s;
+    }
+    var msg = unescape(encodeURIComponent(text));
+    var words = [];
+    for (var i = 0; i < msg.length; i++) {
+      words[i >> 2] |= msg.charCodeAt(i) << (24 - (i % 4) * 8);
+    }
+    var bitLen = msg.length * 8;
+    words[bitLen >> 5] |= 0x80 << (24 - bitLen % 32);
+    words[(((bitLen + 64) >> 9) << 4) + 15] = bitLen;
+    var h0 = 0x67452301, h1 = 0xefcdab89, h2 = 0x98badcfe, h3 = 0x27173398, h4 = 0xc3d2e1f0;
+    for (var j = 0; j < words.length; j += 16) {
+      var w = words.slice(j, j + 16);
+      for (var i = 16; i < 80; i++) {
+        w[i] = rotateLeft(w[i - 3] ^ w[i - 8] ^ w[i - 14] ^ w[i - 16], 1);
+      }
+      var a = h0, b = h1, c = h2, d = h3, e = h4;
+      for (var k = 0; k < 80; k++) {
+        var f, kk;
+        if (k < 20) { f = (b & c) | (~b & d); kk = 0x5a827999; }
+        else if (k < 40) { f = b ^ c ^ d; kk = 0x6ed9eba1; }
+        else if (k < 60) { f = (b & c) | (b & d) | (c & d); kk = 0x8f1bbcdc; }
+        else { f = b ^ c ^ d; kk = 0xca62c1d6; }
+        var temp = (rotateLeft(a, 5) + f + e + kk + (w[k] | 0)) | 0;
+        e = d; d = c; c = rotateLeft(b, 30); b = a; a = temp;
+      }
+      h0 = (h0 + a) | 0; h1 = (h1 + b) | 0; h2 = (h2 + c) | 0; h3 = (h3 + d) | 0; h4 = (h4 + e) | 0;
+    }
+    return (toHex(h0) + toHex(h1) + toHex(h2) + toHex(h3) + toHex(h4)).slice(0, 8);
+  }
+
+  function publishedAssetSrc(filename) {
+    var dot = filename.lastIndexOf('.');
+    var stem = dot >= 0 ? filename.slice(0, dot) : filename;
+    var suffix = dot >= 0 ? filename.slice(dot) : '';
+    return './' + stem + '_' + sha1Hex8(filename) + suffix;
+  }
+
+  function setSlideSrc(filename) {
+    slideImg.onerror = function () {
+      if (slideImg.dataset.fallback !== '1') {
+        slideImg.dataset.fallback = '1';
+        slideImg.src = publishedAssetSrc(filename);
+      }
+    };
+    slideImg.dataset.fallback = '0';
+    slideImg.src = resolveSrc(filename);
+  }
+
+  function renderDots() {
+    dotsEl.innerHTML = '';
+    STEPS.forEach(function (_, i) {
+      var dot = document.createElement('button');
+      dot.type = 'button';
+      dot.className = 'dot' + (i === current ? ' active' : '');
+      dot.setAttribute('role', 'tab');
+      dot.setAttribute('aria-label', 'ステップ ' + (i + 1));
+      dot.setAttribute('aria-selected', i === current ? 'true' : 'false');
+      dot.addEventListener('click', function () {
+        goTo(i);
+      });
+      dotsEl.appendChild(dot);
+    });
+  }
+
+  function goTo(index) {
+    current = Math.max(0, Math.min(STEPS.length - 1, index));
+    var step = STEPS[current];
+    setSlideSrc(step.src);
+    slideImg.alt = step.alt;
+    stepCount.textContent = 'ステップ ' + (current + 1) + ' / ' + STEPS.length;
+    stepLabel.textContent = step.label;
+    prevBtn.disabled = current === 0;
+    nextBtn.disabled = current === STEPS.length - 1;
+    nextBtn.textContent = current === STEPS.length - 1 ? '完了' : '次へ ▶';
+    renderDots();
+  }
+
+  prevBtn.addEventListener('click', function () {
+    goTo(current - 1);
+  });
+  nextBtn.addEventListener('click', function () {
+    if (current < STEPS.length - 1) {
+      goTo(current + 1);
+    }
+  });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'ArrowLeft') goTo(current - 1);
+    if (e.key === 'ArrowRight') goTo(current + 1);
+  });
+
+  goTo(0);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>機械判読クイズ｜AIキャンプ</title>
+<style>
+  :root {
+    --navy: #002060;
+    --accent: #2563eb;
+    --bg: #f8fafc;
+    --text: #0f172a;
+    --muted: #64748b;
+    --border: #e2e8f0;
+    --easy: #16a34a;
+    --easy-bg: #f0fdf4;
+    --medium: #ea580c;
+    --medium-bg: #fff7ed;
+    --hard: #dc2626;
+    --hard-bg: #fef2f2;
+    --ok: #15803d;
+    --ok-bg: #dcfce7;
+    --ng: #b91c1c;
+    --ng-bg: #fee2e2;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+  }
+  .wrap { padding: 16px 20px 20px; max-width: 960px; margin: 0 auto; }
+  .brand { font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 4px; }
+  h1 { margin: 0 0 6px; font-size: 18px; color: var(--navy); line-height: 1.4; }
+  .lead { margin: 0 0 14px; font-size: 13px; color: var(--muted); line-height: 1.5; }
+
+  .pool-label, .zone-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .pool {
+    background: #fff;
+    border: 2px dashed var(--border);
+    border-radius: 12px;
+    padding: 10px;
+    min-height: 72px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .pool.drag-over { border-color: var(--accent); background: #eff6ff; }
+
+  .zones {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  @media (min-width: 640px) {
+    .zones { grid-template-columns: 1fr 1fr 1fr; }
+  }
+
+  .zone {
+    border-radius: 12px;
+    border: 2px solid var(--border);
+    padding: 10px;
+    min-height: 110px;
+    transition: border-color .15s, background .15s;
+  }
+  .zone[data-group="easy"]   { border-color: #86efac; background: var(--easy-bg); }
+  .zone[data-group="medium"] { border-color: #fdba74; background: var(--medium-bg); }
+  .zone[data-group="hard"]   { border-color: #fca5a5; background: var(--hard-bg); }
+  .zone.drag-over { outline: 3px solid var(--accent); outline-offset: 2px; }
+  .zone.selected-target { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+  .zone-title {
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .zone[data-group="easy"]   .zone-title { color: var(--easy); }
+  .zone[data-group="medium"] .zone-title { color: var(--medium); }
+  .zone[data-group="hard"]   .zone-title { color: var(--hard); }
+
+  .zone-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    min-height: 36px;
+  }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    background: #fff;
+    border: 2px solid var(--border);
+    border-radius: 999px;
+    cursor: grab;
+    user-select: none;
+    transition: border-color .15s, box-shadow .15s, transform .1s;
+    touch-action: none;
+  }
+  .chip:hover { border-color: var(--accent); }
+  .chip:active { cursor: grabbing; }
+  .chip.selected {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(37,99,235,.25);
+    transform: scale(1.03);
+  }
+  .chip.dragging { opacity: .5; }
+
+  .controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+  }
+  button {
+    border: 2px solid var(--border);
+    background: #fff;
+    color: var(--text);
+    border-radius: 10px;
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all .2s ease;
+  }
+  button:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+  button:disabled {
+    opacity: .35;
+    cursor: not-allowed;
+    box-shadow: none !important;
+    animation: none !important;
+  }
+  #checkBtn {
+    background: var(--navy);
+    border-color: var(--navy);
+    color: #fff;
+  }
+  #checkBtn:hover:not(:disabled) {
+    background: #1e40af;
+    border-color: #1e40af;
+    color: #fff;
+  }
+  #checkBtn.ready {
+    box-shadow: 0 0 0 4px rgba(37,99,235,.35), 0 4px 14px rgba(0,32,96,.2);
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 4px rgba(37,99,235,.35), 0 4px 14px rgba(0,32,96,.2); }
+    50%      { box-shadow: 0 0 0 8px rgba(37,99,235,.2), 0 4px 18px rgba(0,32,96,.28); }
+  }
+  #resetBtn { font-size: 12px; padding: 8px 14px; }
+
+  .result {
+    display: none;
+    border-radius: 12px;
+    padding: 12px 16px;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.5;
+  }
+  .result.show { display: block; }
+  .result.ok { background: var(--ok-bg); color: var(--ok); border: 2px solid #86efac; }
+  .result.ng { background: var(--ng-bg); color: var(--ng); border: 2px solid #fca5a5; }
+  .result .hint {
+    display: block;
+    margin-top: 4px;
+    font-size: 12px;
+    font-weight: 500;
+    opacity: .9;
+  }
+
+  .status { font-size: 12px; color: var(--muted); font-weight: 600; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">AIキャンプ｜プロンプト中級編 8-5-2</div>
+  <h1>機械判読クイズ：AIに読みやすいデータはどれ？</h1>
+  <p class="lead">8つのデータ形式を、3つのグループへドラッグ（またはタップ）で配置してみましょう。</p>
+
+  <div class="pool-label">未配置（ここから移動）</div>
+  <div class="pool" id="pool" data-zone="pool"></div>
+
+  <div class="zones">
+    <div class="zone" data-group="hard" data-zone="hard">
+      <div class="zone-title">かなり大変</div>
+      <div class="zone-chips"></div>
+    </div>
+    <div class="zone" data-group="medium" data-zone="medium">
+      <div class="zone-title">読みにくい</div>
+      <div class="zone-chips"></div>
+    </div>
+    <div class="zone" data-group="easy" data-zone="easy">
+      <div class="zone-title">読みやすい</div>
+      <div class="zone-chips"></div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button type="button" id="checkBtn" disabled>これでいい？</button>
+    <button type="button" id="resetBtn">やり直す</button>
+    <span class="status" id="status">残り 8 個</span>
+  </div>
+
+  <div class="result" id="result" role="status" aria-live="polite"></div>
+</div>
+
+<script>
+(function () {
+  const ITEMS = [
+    { id: 'md',    label: 'Markdown（.md）' },
+    { id: 'txt',   label: 'テキスト（.txt）' },
+    { id: 'csv',   label: 'CSV（.csv）' },
+    { id: 'word',  label: 'Word（.docx）' },
+    { id: 'excel', label: 'Excel（.xlsx）' },
+    { id: 'pptx',  label: 'PowerPoint（.pptx）' },
+    { id: 'image', label: '画像（JPEGなど）' },
+    { id: 'video', label: '動画' }
+  ];
+
+  const ANSWER = {
+    easy:   ['md', 'txt', 'csv'],
+    medium: ['word', 'excel', 'pptx'],
+    hard:   ['image', 'video']
+  };
+
+  const poolEl = document.getElementById('pool');
+  const checkBtn = document.getElementById('checkBtn');
+  const resetBtn = document.getElementById('resetBtn');
+  const resultEl = document.getElementById('result');
+  const statusEl = document.getElementById('status');
+
+  let selectedChip = null;
+  let dragChipId = null;
+
+  function shuffle(arr) {
+    const a = arr.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  function getZoneEl(name) {
+    if (name === 'pool') return poolEl;
+    return document.querySelector('.zone[data-zone="' + name + '"] .zone-chips');
+  }
+
+  function createChip(item) {
+    const el = document.createElement('span');
+    el.className = 'chip';
+    el.draggable = true;
+    el.dataset.id = item.id;
+    el.textContent = item.label;
+    el.setAttribute('role', 'button');
+    el.setAttribute('tabindex', '0');
+
+    el.addEventListener('dragstart', function (e) {
+      dragChipId = item.id;
+      el.classList.add('dragging');
+      e.dataTransfer.setData('text/plain', item.id);
+      e.dataTransfer.effectAllowed = 'move';
+      clearSelection();
+    });
+    el.addEventListener('dragend', function () {
+      el.classList.remove('dragging');
+      dragChipId = null;
+      clearDragOver();
+    });
+    el.addEventListener('click', function (e) {
+      e.stopPropagation();
+      if (selectedChip === el) {
+        clearSelection();
+        return;
+      }
+      clearSelection();
+      selectedChip = el;
+      el.classList.add('selected');
+      highlightZones();
+    });
+    el.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        el.click();
+      }
+    });
+    return el;
+  }
+
+  function clearSelection() {
+    if (selectedChip) selectedChip.classList.remove('selected');
+    selectedChip = null;
+    document.querySelectorAll('.zone').forEach(function (z) {
+      z.classList.remove('selected-target');
+    });
+  }
+
+  function highlightZones() {
+    document.querySelectorAll('.zone').forEach(function (z) {
+      z.classList.add('selected-target');
+    });
+  }
+
+  function clearDragOver() {
+    document.querySelectorAll('.drag-over').forEach(function (el) {
+      el.classList.remove('drag-over');
+    });
+  }
+
+  function setupDropZone(container) {
+    container.addEventListener('dragover', function (e) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      container.classList.add('drag-over');
+    });
+    container.addEventListener('dragleave', function (e) {
+      if (!container.contains(e.relatedTarget)) {
+        container.classList.remove('drag-over');
+      }
+    });
+    container.addEventListener('drop', function (e) {
+      e.preventDefault();
+      container.classList.remove('drag-over');
+      const id = e.dataTransfer.getData('text/plain') || dragChipId;
+      if (!id) return;
+      const chip = document.querySelector('.chip[data-id="' + id + '"]');
+      if (!chip) return;
+      const target = container.id === 'pool'
+        ? poolEl
+        : container.querySelector('.zone-chips') || container;
+      target.appendChild(chip);
+      clearSelection();
+      updateUI();
+    });
+    container.addEventListener('click', function () {
+      if (!selectedChip) return;
+      const target = container.id === 'pool'
+        ? poolEl
+        : container.querySelector('.zone-chips');
+      if (target) {
+        target.appendChild(selectedChip);
+        clearSelection();
+        updateUI();
+      }
+    });
+  }
+
+  function initChips() {
+    shuffle(ITEMS).forEach(function (item) {
+      poolEl.appendChild(createChip(item));
+    });
+  }
+
+  function countInPool() {
+    return poolEl.querySelectorAll('.chip').length;
+  }
+
+  function getZoneIds(zoneName) {
+    const container = getZoneEl(zoneName);
+    if (!container) return [];
+    return Array.from(container.querySelectorAll('.chip')).map(function (c) {
+      return c.dataset.id;
+    }).sort();
+  }
+
+  function setsEqual(a, b) {
+    if (a.length !== b.length) return false;
+    const sa = a.slice().sort();
+    const sb = b.slice().sort();
+    return sa.every(function (v, i) { return v === sb[i]; });
+  }
+
+  function updateUI() {
+    const remaining = countInPool();
+    statusEl.textContent = remaining > 0 ? '残り ' + remaining + ' 個' : 'すべて配置しました';
+    const allPlaced = remaining === 0;
+    checkBtn.disabled = !allPlaced;
+    checkBtn.classList.toggle('ready', allPlaced);
+    if (!allPlaced) {
+      resultEl.className = 'result';
+      resultEl.textContent = '';
+    }
+  }
+
+  function checkAnswer() {
+    const easy   = getZoneIds('easy');
+    const medium = getZoneIds('medium');
+    const hard   = getZoneIds('hard');
+
+    const ok = setsEqual(easy, ANSWER.easy)
+      && setsEqual(medium, ANSWER.medium)
+      && setsEqual(hard, ANSWER.hard);
+
+    resultEl.className = 'result show ' + (ok ? 'ok' : 'ng');
+    if (ok) {
+      resultEl.innerHTML = '正解！<span class="hint">次のページで、形式ごとの一覧を確認しましょう。</span>';
+    } else {
+      resultEl.innerHTML = '違うよ！頑張って！';
+    }
+  }
+
+  function reset() {
+    document.querySelectorAll('.zone-chips').forEach(function (el) {
+      el.innerHTML = '';
+    });
+    poolEl.innerHTML = '';
+    initChips();
+    clearSelection();
+    resultEl.className = 'result';
+    resultEl.textContent = '';
+    updateUI();
+  }
+
+  document.querySelectorAll('.zone').forEach(setupDropZone);
+  setupDropZone(poolEl);
+
+  checkBtn.addEventListener('click', checkAnswer);
+  resetBtn.addEventListener('click', reset);
+
+  initChips();
+  updateUI();
+})();
+</script>
+</body>
+</html>
