@@ -1,0 +1,1448 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>プレミアム英単語マスター - 英単語学習＆クイズ</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for beautiful icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts - Inter & M PLUS Rounded 1c -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=M+PLUS+Rounded+1c:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <!-- Canvas Confetti for victory effect -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Inter', 'M PLUS Rounded 1c', sans-serif;
+            background: radial-gradient(circle at 50% 50%, #1e1b4b 0%, #0f172a 100%);
+            min-height: 100vh;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.3);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(99, 102, 241, 0.5);
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(99, 102, 241, 0.8);
+        }
+        /* Card Flipping animation for flashcards */
+        .flashcard-container {
+            perspective: 1000px;
+        }
+        .flashcard-inner {
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-style: preserve-3d;
+        }
+        .flashcard-inner.flipped {
+            transform: rotateY(180deg);
+        }
+        .flashcard-front, .flashcard-back {
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+        }
+        .flashcard-back {
+            transform: rotateY(180deg);
+        }
+        /* Active nav styling */
+        .active-tab {
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+        }
+    </style>
+</head>
+<body class="text-slate-100 flex flex-col justify-between antialiased pb-20 md:pb-6">
+
+    <!-- HEADER -->
+    <header class="border-b border-indigo-950 bg-slate-900/80 backdrop-blur-md sticky top-0 z-40 px-4 py-3">
+        <div class="max-w-4xl mx-auto flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="bg-indigo-600/30 p-2.5 rounded-2xl border border-indigo-500/30 flex items-center justify-center">
+                    <i class="fa-solid fa-graduation-cap text-indigo-400 text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg md:text-xl tracking-tight bg-gradient-to-r from-indigo-300 via-purple-300 to-pink-300 bg-clip-text text-transparent">
+                        VocabMaster
+                    </h1>
+                    <p class="text-xs text-slate-400">必須の20英単語トレーニング</p>
+                </div>
+            </div>
+            
+            <!-- Streak and Level Indicator -->
+            <div class="flex items-center space-x-4">
+                <div class="flex items-center bg-slate-800/80 border border-slate-700/50 px-3 py-1.5 rounded-full text-xs font-semibold space-x-1.5">
+                    <i class="fa-solid fa-fire text-orange-500 animate-pulse text-sm"></i>
+                    <span class="text-slate-400">継続:</span>
+                    <span id="streak-count" class="text-orange-400 font-bold">1</span>
+                    <span class="text-slate-400">日</span>
+                </div>
+                <div class="flex items-center bg-indigo-950/50 border border-indigo-800/50 px-3 py-1.5 rounded-full text-xs font-semibold space-x-1.5">
+                    <i class="fa-solid fa-star text-yellow-400 text-sm animate-spin-slow"></i>
+                    <span class="text-slate-400">習得:</span>
+                    <span id="mastered-count" class="text-emerald-400 font-bold">0</span>
+                    <span class="text-slate-400">/20</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT CONTAINER -->
+    <main class="max-w-4xl w-full mx-auto p-4 flex-grow flex flex-col justify-start">
+        
+        <!-- DASHBOARD TAB -->
+        <div id="tab-dashboard" class="space-y-6">
+            <!-- Hero Dashboard Banner -->
+            <div class="bg-gradient-to-br from-indigo-900/60 via-slate-900/40 to-indigo-950/60 border border-indigo-500/20 rounded-3xl p-6 relative overflow-hidden shadow-2xl">
+                <div class="absolute -right-10 -bottom-10 opacity-10 pointer-events-none">
+                    <i class="fa-solid fa-brain text-[150px] text-indigo-400"></i>
+                </div>
+                <div class="relative z-10 max-w-lg">
+                    <span class="bg-indigo-500/20 text-indigo-300 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider border border-indigo-500/30">学習ダッシュボード</span>
+                    <h2 class="text-2xl md:text-3xl font-extrabold mt-3 text-white leading-tight">
+                        苦手な20の重要単語を<br class="hidden sm:inline">ゲーム感覚で完全に克服しよう！
+                    </h2>
+                    <p class="text-sm text-slate-300 mt-2">
+                        ご提示いただいた、忘れやすい英単語リストを元にパーソナライズされています。毎日少しずつ学習を続けましょう。
+                    </p>
+                    <div class="flex flex-wrap gap-3 mt-5">
+                        <button onclick="switchTab('quiz')" class="bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-400 hover:to-indigo-500 text-white font-bold px-5 py-2.5 rounded-2xl shadow-lg shadow-indigo-500/30 transition-all active:scale-95 text-sm flex items-center space-x-2">
+                            <i class="fa-solid fa-play"></i>
+                            <span>クイズを始める</span>
+                        </button>
+                        <button onclick="switchTab('list')" class="bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold px-5 py-2.5 rounded-2xl border border-slate-700/60 transition-all active:scale-95 text-sm flex items-center space-x-2">
+                            <i class="fa-solid fa-list"></i>
+                            <span>単語帳を見る</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Progress Widget -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div class="bg-slate-900/70 border border-slate-800/80 rounded-2xl p-4 flex items-center space-x-4">
+                    <div class="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 text-xl">
+                        <i class="fa-solid fa-check-double"></i>
+                    </div>
+                    <div>
+                        <div class="text-xs text-slate-400">全体の進捗率</div>
+                        <div class="text-xl font-extrabold mt-0.5" id="progress-percent">0%</div>
+                        <div class="w-24 bg-slate-800 h-1.5 rounded-full mt-1 overflow-hidden">
+                            <div id="progress-bar-inner" class="bg-indigo-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-slate-900/70 border border-slate-800/80 rounded-2xl p-4 flex items-center space-x-4">
+                    <div class="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 text-xl">
+                        <i class="fa-solid fa-bolt"></i>
+                    </div>
+                    <div>
+                        <div class="text-xs text-slate-400">正解率</div>
+                        <div class="text-xl font-extrabold mt-0.5" id="overall-accuracy">0%</div>
+                        <div class="text-[10px] text-slate-500">回答全体の精度</div>
+                    </div>
+                </div>
+                <div class="bg-slate-900/70 border border-slate-800/80 rounded-2xl p-4 flex items-center space-x-4">
+                    <div class="w-12 h-12 rounded-xl bg-pink-500/10 border border-pink-500/20 flex items-center justify-center text-pink-400 text-xl">
+                        <i class="fa-solid fa-heart-pulse"></i>
+                    </div>
+                    <div>
+                        <div class="text-xs text-slate-400">苦手な単語</div>
+                        <div class="text-xl font-extrabold mt-0.5 text-pink-400" id="weakest-word-count">0</div>
+                        <div class="text-[10px] text-slate-500">誤答が目立つ単語</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Weak Words Section (Shows dynamically if weak words exist) -->
+            <div id="weak-words-container" class="bg-slate-900/70 border border-slate-800/80 rounded-2xl p-5 hidden">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="font-bold text-slate-200 flex items-center space-x-2">
+                        <i class="fa-solid fa-triangle-exclamation text-pink-500"></i>
+                        <span>特に苦手な単語</span>
+                    </h3>
+                    <span class="text-xs text-slate-400">復習をおすすめします</span>
+                </div>
+                <div id="weak-words-list" class="flex flex-wrap gap-2">
+                    <!-- Dynamic weak words inject here -->
+                </div>
+            </div>
+
+            <!-- Action Guideline -->
+            <div class="bg-indigo-950/20 border border-indigo-900/50 rounded-2xl p-5 flex flex-col md:flex-row items-center justify-between gap-4">
+                <div class="flex items-start space-x-3">
+                    <div class="p-2 bg-indigo-500/10 text-indigo-400 rounded-lg mt-0.5">
+                        <i class="fa-regular fa-lightbulb text-lg"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-slate-200 text-sm">おすすめの学習フロー</h4>
+                        <p class="text-xs text-slate-400 mt-1">「単語帳」で意味を思い出し、「フラッシュカード」で定着させ、「クイズ」で満点を目指しましょう！</p>
+                    </div>
+                </div>
+                <button onclick="startStandardQuiz('all')" class="w-full md:w-auto bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-bold px-4 py-2.5 rounded-xl flex items-center justify-center space-x-2 shadow-lg shadow-purple-500/20">
+                    <i class="fa-solid fa-bolt"></i>
+                    <span>全単語でクイックテスト</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- WORD LIST TAB -->
+        <div id="tab-list" class="hidden space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-900/70 border border-slate-800/80 p-4 rounded-2xl">
+                <div>
+                    <h2 class="text-lg font-bold text-slate-100 flex items-center gap-2">
+                        <i class="fa-solid fa-list-check text-indigo-400"></i>
+                        <span>マイ英単語帳 (全20単語)</span>
+                    </h2>
+                    <p class="text-xs text-slate-400 mt-1">赤シート風に日本語訳を隠してセルフチェックできます。</p>
+                </div>
+                <!-- Control Buttons -->
+                <div class="flex gap-2">
+                    <button id="toggle-sheet-btn" onclick="toggleRedSheet()" class="bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/20 text-xs font-bold px-3 py-2 rounded-xl flex items-center space-x-1.5 transition">
+                        <i id="sheet-icon" class="fa-solid fa-eye-slash"></i>
+                        <span id="sheet-text">日本語を隠す</span>
+                    </button>
+                    <button onclick="playWordListAll()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-xs font-bold px-3 py-2 rounded-xl flex items-center space-x-1.5 transition">
+                        <i class="fa-solid fa-volume-high"></i>
+                        <span>連続発音再生</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Dynamic Search & Filters -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div class="relative">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-sm"></i>
+                    <input type="text" id="word-search" oninput="filterWordList()" placeholder="単語または日本語で検索..." class="w-full bg-slate-900/60 border border-slate-800 rounded-xl py-2 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-200">
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="setFilter('all')" id="filter-all" class="flex-1 bg-indigo-600 text-white text-xs font-bold rounded-xl py-2 active-tab">すべて</button>
+                    <button onclick="setFilter('weak')" id="filter-weak" class="flex-1 bg-slate-900/60 text-slate-400 hover:text-slate-200 border border-slate-800 text-xs font-bold rounded-xl py-2">苦手単語</button>
+                    <button onclick="setFilter('mastered')" id="filter-mastered" class="flex-1 bg-slate-900/60 text-slate-400 hover:text-slate-200 border border-slate-800 text-xs font-bold rounded-xl py-2">習得済み</button>
+                </div>
+            </div>
+
+            <!-- Word List Container -->
+            <div id="word-grid" class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <!-- Word items will be injected by JavaScript -->
+            </div>
+        </div>
+
+        <!-- FLASHCARD TAB -->
+        <div id="tab-flashcards" class="hidden space-y-6">
+            <div class="text-center">
+                <h2 class="text-lg font-bold text-slate-100 flex items-center justify-center gap-2">
+                    <i class="fa-regular fa-clone text-indigo-400"></i>
+                    <span>フラッシュカード</span>
+                </h2>
+                <p class="text-xs text-slate-400 mt-1">カードをタップして意味を確認し、覚えたかどうか仕分けましょう！</p>
+            </div>
+
+            <!-- Card Flip Area -->
+            <div class="max-w-md mx-auto w-full">
+                <!-- Progress counter -->
+                <div class="flex items-center justify-between mb-2 px-2 text-xs text-slate-400">
+                    <span id="flashcard-index">Card 1 of 20</span>
+                    <span id="flashcard-category" class="text-indigo-400 font-bold">全体</span>
+                </div>
+
+                <div onclick="flipFlashcard()" class="flashcard-container cursor-pointer w-full h-72 rounded-3xl group">
+                    <div id="flashcard-inner" class="flashcard-inner w-full h-full relative">
+                        
+                        <!-- Front View (English Word) -->
+                        <div class="flashcard-front absolute inset-0 w-full h-full rounded-3xl bg-gradient-to-br from-indigo-900 to-indigo-950 border-2 border-indigo-500/40 p-8 flex flex-col justify-between shadow-2xl overflow-hidden">
+                            <!-- Floating icon -->
+                            <div class="flex justify-between items-center text-indigo-400/50">
+                                <i class="fa-solid fa-graduation-cap"></i>
+                                <span class="text-[10px] tracking-widest font-bold uppercase">英語</span>
+                            </div>
+                            <!-- Core Word -->
+                            <div class="text-center flex flex-col items-center justify-center space-y-4 my-auto">
+                                <h3 id="card-english" class="text-4xl md:text-5xl font-black text-white tracking-wide">achieve</h3>
+                                <button onclick="speakWord(event, 'card-english')" class="p-2.5 rounded-full bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 transition-colors border border-indigo-500/30">
+                                    <i class="fa-solid fa-volume-high text-lg"></i>
+                                </button>
+                            </div>
+                            <!-- Hint click footer -->
+                            <div class="text-center text-xs text-indigo-400/70 font-medium">
+                                <i class="fa-solid fa-rotate mr-1"></i> クリックして日本語の意味を見る
+                            </div>
+                        </div>
+
+                        <!-- Back View (Japanese Translation) -->
+                        <div class="flashcard-back absolute inset-0 w-full h-full rounded-3xl bg-gradient-to-br from-slate-900 to-indigo-950 border-2 border-indigo-500/40 p-8 flex flex-col justify-between shadow-2xl overflow-hidden">
+                            <div class="flex justify-between items-center text-indigo-400/50">
+                                <i class="fa-solid fa-language"></i>
+                                <span class="text-[10px] tracking-widest font-bold uppercase">日本語</span>
+                            </div>
+                            <!-- Translation -->
+                            <div class="text-center flex flex-col items-center justify-center my-auto">
+                                <span id="card-japanese" class="text-3xl font-extrabold text-indigo-200">達成する</span>
+                                <div class="bg-indigo-950/80 border border-indigo-500/20 rounded-xl px-4 py-1.5 mt-4 text-xs max-w-xs text-indigo-300" id="card-examples">
+                                    例文をロード中...
+                                </div>
+                            </div>
+                            <!-- Hint click footer -->
+                            <div class="text-center text-xs text-indigo-400/70 font-medium">
+                                <i class="fa-solid fa-rotate mr-1"></i> クリックして英語に戻る
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Control Buttons for Card -->
+                <div class="grid grid-cols-2 gap-4 mt-6">
+                    <button onclick="flashcardAction(false)" class="bg-slate-900 hover:bg-slate-800 border-2 border-pink-500/30 hover:border-pink-500/50 text-pink-400 font-extrabold py-3 px-4 rounded-2xl shadow-lg transition active:scale-95 flex items-center justify-center space-x-2">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                        <span>まだ自信がない</span>
+                    </button>
+                    <button onclick="flashcardAction(true)" class="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold py-3 px-4 rounded-2xl shadow-lg shadow-emerald-950/30 transition active:scale-95 flex items-center justify-center space-x-2">
+                        <i class="fa-solid fa-circle-check"></i>
+                        <span>バッチリ覚えた</span>
+                    </button>
+                </div>
+
+                <!-- Jump Cards navigation -->
+                <div class="flex items-center justify-between mt-6 px-4">
+                    <button onclick="prevCard()" class="text-slate-400 hover:text-slate-100 transition flex items-center space-x-1.5 text-xs font-semibold">
+                        <i class="fa-solid fa-chevron-left"></i>
+                        <span>前のカード</span>
+                    </button>
+                    <button onclick="shuffleCards()" class="text-indigo-400 hover:text-indigo-300 transition flex items-center space-x-1.5 text-xs font-semibold bg-indigo-950/40 border border-indigo-800/40 px-3 py-1.5 rounded-full">
+                        <i class="fa-solid fa-shuffle"></i>
+                        <span>シャッフル</span>
+                    </button>
+                    <button onclick="nextCard()" class="text-slate-400 hover:text-slate-100 transition flex items-center space-x-1.5 text-xs font-semibold">
+                        <span>次のカード</span>
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- QUIZ TAB -->
+        <div id="tab-quiz" class="hidden space-y-6">
+            
+            <!-- Quiz Configuration View -->
+            <div id="quiz-config-view" class="space-y-6">
+                <div class="text-center max-w-md mx-auto">
+                    <div class="inline-block p-4 bg-indigo-500/10 rounded-full border border-indigo-500/20 text-indigo-400 text-3xl mb-3">
+                        <i class="fa-solid fa-trophy"></i>
+                    </div>
+                    <h2 class="text-xl font-bold text-white">英単語チャレンジクイズ</h2>
+                    <p class="text-xs text-slate-400 mt-1">学習スタイルに合わせてクイズ形式を選べます。</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-2xl mx-auto">
+                    <!-- Format 1: Eng -> Jap -->
+                    <div onclick="selectQuizFormat('eng-to-jap')" class="group cursor-pointer bg-slate-900/60 hover:bg-slate-900 border-2 border-slate-800 hover:border-indigo-500/60 rounded-2xl p-5 transition-all flex flex-col justify-between text-left">
+                        <div>
+                            <div class="text-indigo-400 text-2xl group-hover:scale-110 duration-200 transition-transform origin-left mb-3">
+                                <i class="fa-solid fa-language"></i>
+                            </div>
+                            <h3 class="font-extrabold text-slate-200 text-sm">英和4択クイズ</h3>
+                            <p class="text-[11px] text-slate-400 mt-1">英語を見て正しい日本語を4つの選択肢から選びます。基本の復習に最適。</p>
+                        </div>
+                        <span class="text-xs text-indigo-400 font-bold mt-4 flex items-center gap-1">選択する <i class="fa-solid fa-arrow-right text-[10px]"></i></span>
+                    </div>
+
+                    <!-- Format 2: Jap -> Eng -->
+                    <div onclick="selectQuizFormat('jap-to-eng')" class="group cursor-pointer bg-slate-900/60 hover:bg-slate-900 border-2 border-slate-800 hover:border-indigo-500/60 rounded-2xl p-5 transition-all flex flex-col justify-between text-left">
+                        <div>
+                            <div class="text-purple-400 text-2xl group-hover:scale-110 duration-200 transition-transform origin-left mb-3">
+                                <i class="fa-solid fa-spell-check"></i>
+                            </div>
+                            <h3 class="font-extrabold text-slate-200 text-sm">和英4択クイズ</h3>
+                            <p class="text-[11px] text-slate-400 mt-1">日本語の意味に該当する英単語を4択から見つけます。アウトプット力向上。</p>
+                        </div>
+                        <span class="text-xs text-purple-400 font-bold mt-4 flex items-center gap-1">選択する <i class="fa-solid fa-arrow-right text-[10px]"></i></span>
+                    </div>
+
+                    <!-- Format 3: Spell Typing -->
+                    <div onclick="selectQuizFormat('spell-typing')" class="group cursor-pointer bg-slate-900/60 hover:bg-slate-900 border-2 border-slate-800 hover:border-indigo-500/60 rounded-2xl p-5 transition-all flex flex-col justify-between text-left">
+                        <div>
+                            <div class="text-emerald-400 text-2xl group-hover:scale-110 duration-200 transition-transform origin-left mb-3">
+                                <i class="fa-solid fa-keyboard"></i>
+                            </div>
+                            <h3 class="font-extrabold text-slate-200 text-sm">スペル入力クイズ</h3>
+                            <p class="text-[11px] text-slate-400 mt-1">日本語の意味に合うスペルを手動入力します。完全マスターのための難関クイズ。</p>
+                        </div>
+                        <span class="text-xs text-emerald-400 font-bold mt-4 flex items-center gap-1">選択する <i class="fa-solid fa-arrow-right text-[10px]"></i></span>
+                    </div>
+                </div>
+
+                <!-- Target selection -->
+                <div class="max-w-md mx-auto bg-slate-900/50 border border-slate-800/80 rounded-2xl p-4 text-center">
+                    <label class="block text-xs font-bold text-slate-400 mb-2">出題する単語の範囲</label>
+                    <div class="flex gap-2">
+                        <button onclick="setQuizRange('all')" id="range-all" class="flex-1 py-1.5 px-3 rounded-lg text-xs font-bold bg-indigo-600 text-white transition">全20単語</button>
+                        <button onclick="setQuizRange('weak')" id="range-weak" class="flex-1 py-1.5 px-3 rounded-lg text-xs font-bold bg-slate-800 text-slate-400 border border-slate-700 hover:text-slate-200 transition">苦手な単語のみ (<span id="config-weak-count">0</span>)</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Active Quiz View -->
+            <div id="quiz-active-view" class="hidden max-w-lg mx-auto bg-slate-900/70 border border-slate-800 rounded-2xl p-6 shadow-2xl space-y-6">
+                <!-- Quiz Progress Header -->
+                <div class="flex items-center justify-between text-xs font-semibold text-slate-400">
+                    <span id="quiz-progress-text">問題 1 / 10</span>
+                    <span class="flex items-center text-emerald-400"><i class="fa-solid fa-circle text-[8px] mr-1.5 animate-pulse"></i> プレイ中</span>
+                </div>
+
+                <!-- Progress Bar -->
+                <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+                    <div id="quiz-progress-bar" class="bg-gradient-to-r from-indigo-500 to-purple-500 h-full rounded-full transition-all duration-300" style="width: 10%"></div>
+                </div>
+
+                <!-- Question Card -->
+                <div class="text-center py-6 px-4 bg-indigo-950/20 border border-indigo-500/10 rounded-2xl">
+                    <span id="quiz-question-lbl" class="text-[10px] tracking-widest text-indigo-400 uppercase font-black">意味にあてはまる単語は？</span>
+                    <h3 id="quiz-question-main" class="text-3xl font-black text-white mt-2 leading-tight"></h3>
+                    <div class="flex justify-center mt-3" id="quiz-tts-btn-container">
+                        <button onclick="speakQuizWord()" class="p-2 rounded-full bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 border border-indigo-500/20 transition">
+                            <i class="fa-solid fa-volume-high text-xs"></i> 音声を聞く
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Choice-Based Answers (Hidden for spell typing) -->
+                <div id="quiz-choices-container" class="grid grid-cols-1 gap-3">
+                    <!-- Dynamic choice buttons injected here -->
+                </div>
+
+                <!-- Text-Based Answers (Spell Typing, Hidden for choice quiz) -->
+                <div id="quiz-spelling-container" class="hidden space-y-4">
+                    <div class="relative">
+                        <input type="text" id="quiz-spell-input" placeholder="英単語を入力してください..." autocomplete="off" class="w-full bg-slate-950/80 border-2 border-slate-800 focus:border-indigo-500 py-3.5 px-4 rounded-xl text-center text-xl font-bold tracking-wider text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all">
+                        <div id="spell-letters-hint" class="text-center text-xs text-slate-500 mt-2">
+                            <!-- Helper letter indicators like: a _ c _ _ _ e -->
+                        </div>
+                    </div>
+                    <button onclick="submitSpellingAnswer()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold py-3 rounded-xl transition active:scale-98 shadow-lg shadow-indigo-600/30">
+                        回答を確定する
+                    </button>
+                </div>
+
+                <!-- Instant Response Popup (for feedback) -->
+                <div id="instant-feedback" class="hidden text-center py-3 rounded-xl font-bold text-sm border flex items-center justify-center space-x-2">
+                    <i class="" id="feedback-icon"></i>
+                    <span id="feedback-message">正解です！</span>
+                </div>
+            </div>
+
+            <!-- Quiz Result View -->
+            <div id="quiz-result-view" class="hidden max-w-md mx-auto bg-slate-900/70 border border-slate-800 rounded-3xl p-6 text-center space-y-6 shadow-2xl">
+                <div>
+                    <div class="inline-block p-4 bg-indigo-500/10 rounded-full border border-indigo-500/20 text-indigo-400 text-4xl mb-3">
+                        <i id="result-medal" class="fa-solid fa-trophy text-yellow-500"></i>
+                    </div>
+                    <h2 class="text-2xl font-black text-white">結果発表</h2>
+                    <p class="text-xs text-slate-400 mt-1">今回のチャレンジお疲れ様でした！</p>
+                </div>
+
+                <!-- Statistics grid -->
+                <div class="grid grid-cols-2 gap-3 bg-slate-950/40 p-4 border border-slate-800/80 rounded-2xl">
+                    <div class="text-center">
+                        <span class="text-[10px] text-slate-500 uppercase font-bold">正答率</span>
+                        <div id="result-score-percent" class="text-2xl font-extrabold text-indigo-400 mt-0.5">0%</div>
+                    </div>
+                    <div class="text-center">
+                        <span class="text-[10px] text-slate-500 uppercase font-bold">正解数</span>
+                        <div id="result-score-fraction" class="text-2xl font-extrabold text-slate-100 mt-0.5">0 / 0</div>
+                    </div>
+                </div>
+
+                <!-- Wrong Word Review Notification -->
+                <div id="result-wrong-box" class="hidden p-4 bg-pink-950/20 border border-pink-500/20 rounded-xl text-left space-y-2">
+                    <h4 class="text-xs font-bold text-pink-400 flex items-center space-x-2">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                        <span>間違えた単語があります:</span>
+                    </h4>
+                    <ul id="result-wrong-list" class="text-xs text-slate-300 list-disc list-inside space-y-1 pl-1">
+                        <!-- Wrong words listed here -->
+                    </ul>
+                </div>
+
+                <!-- Buttons -->
+                <div class="space-y-2">
+                    <button id="retry-wrong-btn" onclick="retryWrongQuiz()" class="hidden w-full bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-500 hover:to-rose-500 text-white font-bold py-3 rounded-xl shadow-lg transition duration-200 flex items-center justify-center space-x-2">
+                        <i class="fa-solid fa-rotate-right"></i>
+                        <span>間違えた単語のみを再テスト</span>
+                    </button>
+                    <button onclick="switchTab('quiz')" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-xl transition duration-200">
+                        クイズ選択に戻る
+                    </button>
+                    <button onclick="switchTab('dashboard')" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold py-3 rounded-xl border border-slate-700">
+                        ダッシュボードへ戻る
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- BOTTOM FOOTER / NAVIGATION BAR -->
+    <nav class="fixed bottom-0 left-0 right-0 md:relative md:bottom-auto md:left-auto md:right-auto bg-slate-900 border-t border-indigo-950 z-40 px-3 py-2 md:py-6 md:border-t-0 md:bg-transparent">
+        <div class="max-w-md mx-auto flex justify-around md:justify-center md:space-x-4">
+            
+            <button onclick="switchTab('dashboard')" id="nav-dashboard" class="flex flex-col md:flex-row items-center justify-center py-2 px-4 rounded-xl text-slate-400 hover:text-slate-200 transition-all text-xs font-bold active-tab">
+                <i class="fa-solid fa-house text-lg md:text-sm md:mr-2"></i>
+                <span class="mt-1 md:mt-0">ホーム</span>
+            </button>
+
+            <button onclick="switchTab('list')" id="nav-list" class="flex flex-col md:flex-row items-center justify-center py-2 px-4 rounded-xl text-slate-400 hover:text-slate-200 transition-all text-xs font-bold">
+                <i class="fa-solid fa-list text-lg md:text-sm md:mr-2"></i>
+                <span class="mt-1 md:mt-0">単語帳</span>
+            </button>
+
+            <button onclick="switchTab('flashcards')" id="nav-flashcards" class="flex flex-col md:flex-row items-center justify-center py-2 px-4 rounded-xl text-slate-400 hover:text-slate-200 transition-all text-xs font-bold">
+                <i class="fa-regular fa-clone text-lg md:text-sm md:mr-2"></i>
+                <span class="mt-1 md:mt-0">カード</span>
+            </button>
+
+            <button onclick="switchTab('quiz')" id="nav-quiz" class="flex flex-col md:flex-row items-center justify-center py-2 px-4 rounded-xl text-slate-400 hover:text-slate-200 transition-all text-xs font-bold">
+                <i class="fa-solid fa-trophy text-lg md:text-sm md:mr-2"></i>
+                <span class="mt-1 md:mt-0">クイズ</span>
+            </button>
+
+        </div>
+    </nav>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        // Core Word Database from the user prompt
+        const VOCABULARY = [
+            { english: 'achieve', japanese: '達成する', hint: '目標や夢、成功をやり遂げることで使われます。', example: 'We can achieve our goals.' },
+            { english: 'consider', japanese: '考慮する', hint: '決定や判断の前に熟考することです。', example: 'Please consider this offer.' },
+            { english: 'develop', japanese: '発展する／開発する', hint: '新しい技術、能力、事業を成長・構築させることです。', example: 'We need to develop new skills.' },
+            { english: 'environment', japanese: '環境', hint: '自然環境や、周囲を取り巻く状況を指します。', example: 'Protecting the environment.' },
+            { english: 'increase', japanese: '増える／増やす', hint: '量、価格、数量、サイズが上がることです。', example: 'Prices continue to increase.' },
+            { english: 'reduce', japanese: '減らす', hint: '量、コスト、重さ、スピードを下げることです。', example: 'Reduce plastic waste.' },
+            { english: 'suggest', japanese: '提案する', hint: 'アイデアや解決策をそれとなく示す時に使います。', example: 'What do you suggest?' },
+            { english: 'responsible', japanese: '責任がある', hint: 'ある出来事や任務に対して義務を負う状態。', example: 'Who is responsible for this?' },
+            { english: 'opportunity', japanese: '機会', hint: 'チャンス。何かをするのに適した好機です。', example: 'A great opportunity to learn.' },
+            { english: 'require', japanese: '要求する／必要とする', hint: 'ルール、資格、あるいは本質的に不可欠であること。', example: 'Most jobs require experience.' },
+            { english: 'experience', japanese: '経験', hint: '直接体験した事柄。スキル。', example: 'I have some experience in IT.' },
+            { english: 'population', japanese: '人口', hint: '特定の地域や国に住むすべての人々。', example: 'The world population is growing.' },
+            { english: 'influence', japanese: '影響（を与える）', hint: '間接的に人や物事に変化を起こす力。', example: 'Social media has deep influence.' },
+            { english: 'material', japanese: '材料／資料', hint: '建物、製品の材料。研究や会議の情報・素材。', example: 'We need building material.' },
+            { english: 'knowledge', japanese: '知識', hint: '経験、勉強、理解によって得られた情報。', example: 'Knowledge is power.' },
+            { english: 'culture', japanese: '文化', hint: '社会、コミュニティ、国が持つ慣習、芸術、信仰。', example: 'Japanese culture is rich.' },
+            { english: 'industry', japanese: '産業', hint: '製造業、観光業、農業などの特定の経済活動。', example: 'The tech industry is booming.' },
+            { english: 'technology', japanese: '技術', hint: '科学的知識を応用したシステムやデバイス。', example: 'Modern technology is helpful.' },
+            { english: 'challenge', japanese: '挑戦（する）', hint: 'やりがいがあり困難な課題。立ち向かうこと。', example: 'Accept a difficult challenge.' },
+            { english: 'communication', japanese: '意思疎通／通信', hint: '言葉やジェスチャーによる情報のやり取り。', example: 'Good communication is key.' }
+        ];
+
+        // Web Audio API Synth for high fidelity sounds without external latency
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            if (type === 'correct') {
+                // Happy chime
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5
+                osc.frequency.setValueAtTime(880.00, audioCtx.currentTime + 0.1); // A5
+                gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.35);
+            } else if (type === 'wrong') {
+                // Sad slide buzzer
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+                osc.frequency.linearRampToValueAtTime(110, audioCtx.currentTime + 0.2);
+                gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.25);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.3);
+            } else if (type === 'card-flip') {
+                // Soft whoosh
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(100, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(600, audioCtx.currentTime + 0.15);
+                gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.2);
+            } else if (type === 'victory') {
+                // Multi-note fan fare
+                const now = audioCtx.currentTime;
+                const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+                notes.forEach((freq, idx) => {
+                    const osc_f = audioCtx.createOscillator();
+                    const gain_f = audioCtx.createGain();
+                    osc_f.connect(gain_f);
+                    gain_f.connect(audioCtx.destination);
+                    osc_f.frequency.value = freq;
+                    gain_f.gain.setValueAtTime(0, now);
+                    gain_f.gain.linearRampToValueAtTime(0.1, now + idx * 0.08);
+                    gain_f.gain.exponentialRampToValueAtTime(0.01, now + 0.4 + idx * 0.1);
+                    osc_f.start(now + idx * 0.08);
+                    osc_f.stop(now + 0.5 + idx * 0.1);
+                });
+            }
+        }
+
+        // State variables
+        let appState = {
+            streak: 1,
+            stats: {}, // Map English word -> { correctCount: X, wrongCount: Y, mastered: boolean }
+            currentFilter: 'all',
+            searchQuery: '',
+            isRedSheetActive: false,
+            // Flashcard states
+            flashcardList: [...VOCABULARY],
+            currentFlashcardIdx: 0,
+            isCardFlipped: false,
+            // Quiz states
+            quizMode: 'all', // 'all' or 'weak'
+            quizFormat: 'eng-to-jap', // 'eng-to-jap', 'jap-to-eng', 'spell-typing'
+            quizQuestions: [],
+            currentQuizIdx: 0,
+            quizScore: 0,
+            wrongAnswers: [], // Array of vocabulary elements wrong in the current run
+            isAnsweringAllowed: true
+        };
+
+        // Initialize App
+        window.onload = function() {
+            loadUserData();
+            initWordList();
+            updateDashboardStats();
+            updateStreakDisplay();
+            setupTextToSpeech();
+        }
+
+        // Load & Save user progress
+        function loadUserData() {
+            const savedStats = localStorage.getItem('vocabmaster_stats');
+            if (savedStats) {
+                appState.stats = JSON.parse(savedStats);
+            } else {
+                // Initialize clean stats for all 20 words
+                VOCABULARY.forEach(word => {
+                    appState.stats[word.english] = { correctCount: 0, wrongCount: 0, mastered: false };
+                });
+                saveUserData();
+            }
+
+            // Streak setup
+            const lastActive = localStorage.getItem('vocabmaster_last_active');
+            const savedStreak = localStorage.getItem('vocabmaster_streak');
+            if (savedStreak) {
+                appState.streak = parseInt(savedStreak, 10);
+            }
+
+            const today = new Date().toDateString();
+            if (lastActive) {
+                const yesterday = new Date();
+                yesterday.setDate(yesterday.getDate() - 1);
+                
+                if (lastActive === today) {
+                    // Already logged in today
+                } else if (lastActive === yesterday.toDateString()) {
+                    // Consecutive day!
+                    appState.streak++;
+                    localStorage.setItem('vocabmaster_streak', appState.streak);
+                } else {
+                    // Broken streak
+                    appState.streak = 1;
+                    localStorage.setItem('vocabmaster_streak', appState.streak);
+                }
+            }
+            localStorage.setItem('vocabmaster_last_active', today);
+        }
+
+        function saveUserData() {
+            localStorage.setItem('vocabmaster_stats', JSON.stringify(appState.stats));
+            updateDashboardStats();
+        }
+
+        function updateStreakDisplay() {
+            document.getElementById('streak-count').textContent = appState.streak;
+        }
+
+        function updateDashboardStats() {
+            let masteredCount = 0;
+            let totalCorrect = 0;
+            let totalTries = 0;
+            let weakWords = [];
+
+            VOCABULARY.forEach(word => {
+                const stat = appState.stats[word.english] || { correctCount: 0, wrongCount: 0, mastered: false };
+                if (stat.mastered) {
+                    masteredCount++;
+                }
+                totalCorrect += stat.correctCount;
+                totalTries += (stat.correctCount + stat.wrongCount);
+
+                // Weak words heuristic: has more wrong answers than correct, or got wrong at least once recently
+                if (stat.wrongCount > 0 && stat.wrongCount >= stat.correctCount) {
+                    weakWords.push(word);
+                }
+            });
+
+            // Mastered Badge
+            document.getElementById('mastered-count').textContent = masteredCount;
+
+            // Mastery Percent
+            const percent = Math.round((masteredCount / VOCABULARY.length) * 100);
+            document.getElementById('progress-percent').textContent = `${percent}%`;
+            document.getElementById('progress-bar-inner').style.width = `${percent}%`;
+
+            // Accuracy
+            const accuracy = totalTries > 0 ? Math.round((totalCorrect / totalTries) * 100) : 0;
+            document.getElementById('overall-accuracy').textContent = `${accuracy}%`;
+
+            // Weak words display
+            document.getElementById('weakest-word-count').textContent = weakWords.length;
+            document.getElementById('config-weak-count').textContent = weakWords.length;
+
+            const weakWordsContainer = document.getElementById('weak-words-container');
+            const weakWordsList = document.getElementById('weak-words-list');
+            
+            if (weakWords.length > 0) {
+                weakWordsContainer.classList.remove('hidden');
+                weakWordsList.innerHTML = '';
+                weakWords.slice(0, 5).forEach(word => {
+                    const btn = document.createElement('button');
+                    btn.className = "bg-pink-950/40 hover:bg-pink-900/40 text-pink-400 border border-pink-900/50 rounded-xl px-3 py-1 text-xs font-semibold flex items-center space-x-1 transition duration-150";
+                    btn.onclick = () => {
+                        switchTab('list');
+                        document.getElementById('word-search').value = word.english;
+                        filterWordList();
+                    };
+                    btn.innerHTML = `<i class="fa-solid fa-volume-high text-[10px]" onclick="speakWord(event, '${word.english}')"></i> <span>${word.english} (${word.japanese})</span>`;
+                    weakWordsList.appendChild(btn);
+                });
+            } else {
+                weakWordsContainer.classList.add('hidden');
+            }
+        }
+
+        // Single Page Navigation router
+        function switchTab(targetTab) {
+            const tabs = ['dashboard', 'list', 'flashcards', 'quiz'];
+            
+            // Hide all tabs & clear active tab style
+            tabs.forEach(tab => {
+                document.getElementById(`tab-${tab}`).classList.add('hidden');
+                document.getElementById(`nav-${tab}`).classList.remove('active-tab');
+            });
+
+            // Show target
+            document.getElementById(`tab-${targetTab}`).classList.remove('hidden');
+            document.getElementById(`nav-${targetTab}`).classList.add('active-tab');
+
+            // Tab specific initializations
+            if (targetTab === 'flashcards') {
+                initFlashcards();
+            } else if (targetTab === 'quiz') {
+                exitActiveQuiz();
+            } else if (targetTab === 'list') {
+                initWordList();
+            }
+        }
+
+        // WORD LIST CONTROLLER
+        function initWordList() {
+            const grid = document.getElementById('word-grid');
+            grid.innerHTML = '';
+
+            const filteredWords = VOCABULARY.filter(word => {
+                const stat = appState.stats[word.english] || { correctCount: 0, wrongCount: 0, mastered: false };
+                
+                // Text search match
+                const matchesSearch = word.english.toLowerCase().includes(appState.searchQuery.toLowerCase()) || 
+                                      word.japanese.includes(appState.searchQuery);
+
+                if (!matchesSearch) return false;
+
+                // Category filter
+                if (appState.currentFilter === 'weak') {
+                    return stat.wrongCount > 0 && stat.wrongCount >= stat.correctCount;
+                } else if (appState.currentFilter === 'mastered') {
+                    return stat.mastered;
+                }
+                return true; // 'all'
+            });
+
+            if (filteredWords.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-1 md:col-span-2 text-center py-10 bg-slate-900/40 rounded-2xl border border-slate-800">
+                        <i class="fa-regular fa-folder-open text-slate-500 text-3xl mb-2 block"></i>
+                        <p class="text-slate-400 text-sm">該当する単語がありません。</p>
+                    </div>
+                `;
+                return;
+            }
+
+            filteredWords.forEach(word => {
+                const stat = appState.stats[word.english] || { correctCount: 0, wrongCount: 0, mastered: false };
+                const card = document.createElement('div');
+                card.className = "bg-slate-900/60 border border-slate-800/80 rounded-2xl p-4 flex items-center justify-between shadow-sm hover:border-indigo-500/30 transition-all";
+                
+                const cardContent = `
+                    <div class="flex-1 min-w-0 pr-2">
+                        <div class="flex items-center space-x-2">
+                            <h3 class="text-lg font-black text-slate-100 tracking-wide truncate select-all" id="text-${word.english}">${word.english}</h3>
+                            <button onclick="speakWord(event, 'text-${word.english}')" class="text-slate-500 hover:text-indigo-400 p-1 rounded-lg transition">
+                                <i class="fa-solid fa-volume-high text-xs"></i>
+                            </button>
+                        </div>
+                        
+                        <!-- Translation wrapper -->
+                        <div class="mt-1 flex items-center">
+                            <span class="text-sm font-bold tracking-wide transition-all ${appState.isRedSheetActive ? 'bg-rose-950/80 text-rose-950/0 px-2 py-0.5 rounded select-none hover:bg-rose-900/10 hover:text-slate-200 cursor-help duration-150' : 'text-indigo-300'}" title="${appState.isRedSheetActive ? 'ホバーで一時表示' : ''}">
+                                ${word.japanese}
+                            </span>
+                        </div>
+                        <p class="text-[10px] text-slate-500 mt-1 truncate">${word.hint}</p>
+                    </div>
+
+                    <!-- Right Controls / Stats -->
+                    <div class="flex items-center space-x-3">
+                        <div class="text-right text-[10px] text-slate-500 font-mono hidden sm:block">
+                            <div class="text-emerald-500">正解: ${stat.correctCount}</div>
+                            <div class="text-pink-500">ミス: ${stat.wrongCount}</div>
+                        </div>
+                        <button onclick="toggleWordMastery(event, '${word.english}')" class="p-2.5 rounded-xl border transition-colors flex items-center justify-center ${stat.mastered ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : 'bg-slate-800/50 border-slate-700/50 text-slate-500 hover:text-slate-300'}">
+                            <i class="fa-solid ${stat.mastered ? 'fa-check' : 'fa-circle-notch'}"></i>
+                        </button>
+                    </div>
+                `;
+
+                card.innerHTML = cardContent;
+                grid.appendChild(card);
+            });
+        }
+
+        function toggleRedSheet() {
+            appState.isRedSheetActive = !appState.isRedSheetActive;
+            const btn = document.getElementById('toggle-sheet-btn');
+            const icon = document.getElementById('sheet-icon');
+            const text = document.getElementById('sheet-text');
+
+            if (appState.isRedSheetActive) {
+                btn.className = "bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 border border-rose-500/20 text-xs font-bold px-3 py-2 rounded-xl flex items-center space-x-1.5 transition";
+                icon.className = "fa-solid fa-eye";
+                text.textContent = "日本語を表示";
+            } else {
+                btn.className = "bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/20 text-xs font-bold px-3 py-2 rounded-xl flex items-center space-x-1.5 transition";
+                icon.className = "fa-solid fa-eye-slash";
+                text.textContent = "日本語を隠す";
+            }
+            initWordList();
+        }
+
+        function filterWordList() {
+            appState.searchQuery = document.getElementById('word-search').value;
+            initWordList();
+        }
+
+        function setFilter(filterType) {
+            const types = ['all', 'weak', 'mastered'];
+            types.forEach(t => {
+                document.getElementById(`filter-${t}`).className = "flex-1 bg-slate-900/60 text-slate-400 hover:text-slate-200 border border-slate-800 text-xs font-bold rounded-xl py-2";
+            });
+            document.getElementById(`filter-${filterType}`).className = "flex-1 text-white text-xs font-bold rounded-xl py-2 active-tab";
+            appState.currentFilter = filterType;
+            initWordList();
+        }
+
+        function toggleWordMastery(event, english) {
+            event.stopPropagation();
+            const stat = appState.stats[english] || { correctCount: 0, wrongCount: 0, mastered: false };
+            stat.mastered = !stat.mastered;
+            appState.stats[english] = stat;
+            saveUserData();
+            initWordList();
+        }
+
+        // Audio helper logic for successive Speech Synthesizer playing
+        let isTTSListPlaying = false;
+        async function playWordListAll() {
+            if (isTTSListPlaying) {
+                window.speechSynthesis.cancel();
+                isTTSListPlaying = false;
+                return;
+            }
+            
+            isTTSListPlaying = true;
+            for (let i = 0; i < VOCABULARY.length; i++) {
+                if (!isTTSListPlaying) break;
+                const item = VOCABULARY[i];
+                highlightListItem(item.english, true);
+                await speakSync(item.english);
+                highlightListItem(item.english, false);
+                await new Promise(resolve => setTimeout(resolve, 800)); // wait a bit before next word
+            }
+            isTTSListPlaying = false;
+        }
+
+        function highlightListItem(englishId, toggleOn) {
+            const element = document.getElementById(`text-${englishId}`);
+            if (element) {
+                if (toggleOn) {
+                    element.classList.add('text-indigo-400', 'scale-110');
+                } else {
+                    element.classList.remove('text-indigo-400', 'scale-110');
+                }
+            }
+        }
+
+        // TTS Engine using Browser Synthesis
+        let voice = null;
+        function setupTextToSpeech() {
+            if ('speechSynthesis' in window) {
+                const fetchVoices = () => {
+                    const voices = window.speechSynthesis.getVoices();
+                    // Prefer English native speaker US/UK
+                    voice = voices.find(v => v.lang.startsWith('en-US')) || 
+                            voices.find(v => v.lang.startsWith('en-GB')) || 
+                            voices.find(v => v.lang.startsWith('en')) || 
+                            voices[0];
+                };
+                fetchVoices();
+                if (window.speechSynthesis.onvoiceschanged !== undefined) {
+                    window.speechSynthesis.onvoiceschanged = fetchVoices;
+                }
+            }
+        }
+
+        function speakWord(event, elementId) {
+            if (event) event.stopPropagation();
+            const txt = document.getElementById(elementId).innerText || document.getElementById(elementId).textContent;
+            speak(txt);
+        }
+
+        function speak(text) {
+            if (!('speechSynthesis' in window)) return;
+            window.speechSynthesis.cancel(); // Stop playing anything else
+            const utterance = new SpeechSynthesisUtterance(text);
+            if (voice) utterance.voice = voice;
+            utterance.rate = 0.85; // Slightly slower for crisp clear listening
+            utterance.pitch = 1.0;
+            window.speechSynthesis.speak(utterance);
+        }
+
+        function speakSync(text) {
+            return new Promise((resolve) => {
+                if (!('speechSynthesis' in window)) {
+                    resolve();
+                    return;
+                }
+                const utterance = new SpeechSynthesisUtterance(text);
+                if (voice) utterance.voice = voice;
+                utterance.rate = 0.8;
+                utterance.onend = () => resolve();
+                utterance.onerror = () => resolve();
+                window.speechSynthesis.speak(utterance);
+            });
+        }
+
+        // FLASHCARDS CONTROLLER
+        function initFlashcards() {
+            appState.flashcardList = [...VOCABULARY];
+            appState.currentFlashcardIdx = 0;
+            appState.isCardFlipped = false;
+            document.getElementById('flashcard-inner').classList.remove('flipped');
+            renderFlashcard();
+        }
+
+        function renderFlashcard() {
+            const currentItem = appState.flashcardList[appState.currentFlashcardIdx];
+            if (!currentItem) return;
+
+            // Render English / Front
+            document.getElementById('card-english').textContent = currentItem.english;
+            
+            // Render Japanese / Back
+            document.getElementById('card-japanese').textContent = currentItem.japanese;
+            document.getElementById('card-examples').innerHTML = `<p class="italic text-slate-400">" ${currentItem.example} "</p><p class="text-[10px] text-indigo-400 mt-1">${currentItem.hint}</p>`;
+            
+            // Index Display
+            document.getElementById('flashcard-index').textContent = `Card ${appState.currentFlashcardIdx + 1} of ${appState.flashcardList.length}`;
+            
+            // Auto voice on flip/load front
+            if (!appState.isCardFlipped) {
+                setTimeout(() => speak(currentItem.english), 200);
+            }
+        }
+
+        function flipFlashcard() {
+            appState.isCardFlipped = !appState.isCardFlipped;
+            const inner = document.getElementById('flashcard-inner');
+            playSound('card-flip');
+            
+            if (appState.isCardFlipped) {
+                inner.classList.add('flipped');
+            } else {
+                inner.classList.remove('flipped');
+            }
+        }
+
+        function nextCard() {
+            if (appState.flashcardList.length === 0) return;
+            appState.isCardFlipped = false;
+            document.getElementById('flashcard-inner').classList.remove('flipped');
+            appState.currentFlashcardIdx = (appState.currentFlashcardIdx + 1) % appState.flashcardList.length;
+            setTimeout(renderFlashcard, 150);
+        }
+
+        function prevCard() {
+            if (appState.flashcardList.length === 0) return;
+            appState.isCardFlipped = false;
+            document.getElementById('flashcard-inner').classList.remove('flipped');
+            appState.currentFlashcardIdx = (appState.currentFlashcardIdx - 1 + appState.flashcardList.length) % appState.flashcardList.length;
+            setTimeout(renderFlashcard, 150);
+        }
+
+        function shuffleCards() {
+            appState.isCardFlipped = false;
+            document.getElementById('flashcard-inner').classList.remove('flipped');
+            
+            // Fisher-Yates shuffle
+            for (let i = appState.flashcardList.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [appState.flashcardList[i], appState.flashcardList[j]] = [appState.flashcardList[j], appState.flashcardList[i]];
+            }
+            appState.currentFlashcardIdx = 0;
+            setTimeout(renderFlashcard, 200);
+        }
+
+        function flashcardAction(wasKnown) {
+            const currentItem = appState.flashcardList[appState.currentFlashcardIdx];
+            const stat = appState.stats[currentItem.english] || { correctCount: 0, wrongCount: 0, mastered: false };
+            
+            if (wasKnown) {
+                stat.correctCount++;
+                if (stat.correctCount >= 3) {
+                    stat.mastered = true;
+                }
+            } else {
+                stat.wrongCount++;
+                stat.mastered = false;
+            }
+
+            appState.stats[currentItem.english] = stat;
+            saveUserData();
+
+            // Tiny visual swipe off logic or quick feedback
+            nextCard();
+        }
+
+        // QUIZ SYSTEM CONTROLLER
+        function setQuizRange(rangeType) {
+            const btnAll = document.getElementById('range-all');
+            const btnWeak = document.getElementById('range-weak');
+
+            if (rangeType === 'all') {
+                btnAll.className = "flex-1 py-1.5 px-3 rounded-lg text-xs font-bold bg-indigo-600 text-white transition";
+                btnWeak.className = "flex-1 py-1.5 px-3 rounded-lg text-xs font-bold bg-slate-800 text-slate-400 border border-slate-700 hover:text-slate-200 transition";
+                appState.quizMode = 'all';
+            } else {
+                // Check if user has weak words
+                const weakWordsCount = parseInt(document.getElementById('config-weak-count').textContent, 10);
+                if (weakWordsCount === 0) {
+                    showBannerMessage("苦手な単語がありません。まずは全単語クイズに挑戦してみましょう！", "info");
+                    return;
+                }
+                btnAll.className = "flex-1 py-1.5 px-3 rounded-lg text-xs font-bold bg-slate-800 text-slate-400 border border-slate-700 hover:text-slate-200 transition";
+                btnWeak.className = "flex-1 py-1.5 px-3 rounded-lg text-xs font-bold bg-indigo-600 text-white transition";
+                appState.quizMode = 'weak';
+            }
+        }
+
+        function selectQuizFormat(format) {
+            appState.quizFormat = format;
+            startQuizChallenge();
+        }
+
+        // Standard starts from dashboards
+        function startStandardQuiz(range) {
+            switchTab('quiz');
+            setQuizRange(range);
+            appState.quizFormat = 'eng-to-jap';
+            startQuizChallenge();
+        }
+
+        function startQuizChallenge() {
+            // Decide words to include
+            let rawPool = [...VOCABULARY];
+            if (appState.quizMode === 'weak') {
+                rawPool = VOCABULARY.filter(word => {
+                    const stat = appState.stats[word.english];
+                    return stat && stat.wrongCount > 0 && stat.wrongCount >= stat.correctCount;
+                });
+            }
+
+            if (rawPool.length === 0) {
+                rawPool = [...VOCABULARY]; // Fallback safely
+            }
+
+            // Shuffle pool and select max 10 questions for quick sessions
+            const shuffledPool = [...rawPool].sort(() => 0.5 - Math.random());
+            appState.quizQuestions = shuffledPool.slice(0, 10);
+
+            // Set state indices
+            appState.currentQuizIdx = 0;
+            appState.quizScore = 0;
+            appState.wrongAnswers = [];
+            appState.isAnsweringAllowed = true;
+
+            // Switch views
+            document.getElementById('quiz-config-view').classList.add('hidden');
+            document.getElementById('quiz-result-view').classList.add('hidden');
+            document.getElementById('quiz-active-view').classList.remove('hidden');
+
+            renderQuizQuestion();
+        }
+
+        function renderQuizQuestion() {
+            const currentItem = appState.quizQuestions[appState.currentQuizIdx];
+            if (!currentItem) {
+                finishQuiz();
+                return;
+            }
+
+            appState.isAnsweringAllowed = true;
+            
+            // Clear feedback box
+            const feedback = document.getElementById('instant-feedback');
+            feedback.classList.add('hidden');
+
+            // Set progress text
+            document.getElementById('quiz-progress-text').textContent = `問題 ${appState.currentQuizIdx + 1} / ${appState.quizQuestions.length}`;
+            const percent = ((appState.currentQuizIdx + 1) / appState.quizQuestions.length) * 100;
+            document.getElementById('quiz-progress-bar').style.width = `${percent}%`;
+
+            // Reset spelling elements
+            document.getElementById('quiz-spell-input').value = '';
+            document.getElementById('quiz-spell-input').classList.remove('border-emerald-500', 'border-pink-500');
+
+            // Voice synthesis setup (show helper buttons if English audio is relevant)
+            const ttsBtnContainer = document.getElementById('quiz-tts-btn-container');
+            if (appState.quizFormat === 'eng-to-jap') {
+                ttsBtnContainer.classList.remove('hidden');
+                speak(currentItem.english);
+            } else {
+                ttsBtnContainer.classList.add('hidden');
+            }
+
+            if (appState.quizFormat === 'eng-to-jap') {
+                // ENGLISH -> JAPANESE (4 Choice)
+                document.getElementById('quiz-question-lbl').textContent = "英単語に合う日本語を選んでください";
+                document.getElementById('quiz-question-main').textContent = currentItem.english;
+                
+                document.getElementById('quiz-choices-container').classList.remove('hidden');
+                document.getElementById('quiz-spelling-container').classList.add('hidden');
+                
+                generateFourChoices(currentItem, 'japanese');
+            } else if (appState.quizFormat === 'jap-to-eng') {
+                // JAPANESE -> ENGLISH (4 Choice)
+                document.getElementById('quiz-question-lbl').textContent = "日本語に合う英単語を選んでください";
+                document.getElementById('quiz-question-main').textContent = currentItem.japanese;
+                
+                document.getElementById('quiz-choices-container').classList.remove('hidden');
+                document.getElementById('quiz-spelling-container').classList.add('hidden');
+                
+                generateFourChoices(currentItem, 'english');
+            } else if (appState.quizFormat === 'spell-typing') {
+                // SPELL TYPING HANDLER
+                document.getElementById('quiz-question-lbl').textContent = "日本語に合う英単語のスペルを入力してください";
+                document.getElementById('quiz-question-main').textContent = currentItem.japanese;
+                
+                document.getElementById('quiz-choices-container').classList.add('hidden');
+                document.getElementById('quiz-spelling-container').classList.remove('hidden');
+                
+                // Show letters indicator e.g. "a _ c _ _ _ _"
+                setupSpellingHints(currentItem.english);
+                
+                setTimeout(() => {
+                    document.getElementById('quiz-spell-input').focus();
+                }, 100);
+            }
+        }
+
+        function generateFourChoices(correctItem, targetField) {
+            const choicesContainer = document.getElementById('quiz-choices-container');
+            choicesContainer.innerHTML = '';
+
+            // Extract correct answer
+            const correctAnswer = correctItem[targetField];
+
+            // Filter distractors
+            const distractors = VOCABULARY
+                .filter(item => item[targetField] !== correctAnswer)
+                .map(item => item[targetField]);
+
+            // Shuffle distractors & get 3
+            const chosenDistractors = distractors.sort(() => 0.5 - Math.random()).slice(0, 3);
+            
+            // Mix with correct answer
+            const allChoices = [correctAnswer, ...chosenDistractors].sort(() => 0.5 - Math.random());
+
+            allChoices.forEach((choice, index) => {
+                const btn = document.createElement('button');
+                btn.className = "w-full bg-slate-950/60 hover:bg-indigo-950/40 border border-slate-800 hover:border-indigo-500/50 p-3.5 rounded-xl text-left font-bold text-slate-200 transition duration-150 flex items-center justify-between group active:scale-[0.99]";
+                btn.onclick = () => submitChoiceAnswer(choice, btn);
+                
+                // Keyboard short cuts visually
+                const shortcutLabel = ['A', 'B', 'C', 'D'][index];
+                btn.innerHTML = `
+                    <div class="flex items-center space-x-3">
+                        <span class="w-6 h-6 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-center text-[10px] text-slate-500 font-extrabold group-hover:border-indigo-500/50 group-hover:text-indigo-400">${shortcutLabel}</span>
+                        <span>${choice}</span>
+                    </div>
+                    <i class="fa-solid fa-chevron-right text-[10px] text-slate-600 group-hover:text-indigo-400 group-hover:translate-x-1 duration-150 transition-transform"></i>
+                `;
+                choicesContainer.appendChild(btn);
+            });
+        }
+
+        // Spelling Helper Hint generator
+        function setupSpellingHints(word) {
+            const hintContainer = document.getElementById('spell-letters-hint');
+            hintContainer.innerHTML = '';
+
+            // Reveal first and last letters for assistance
+            const letters = word.split('');
+            const textParts = letters.map((char, index) => {
+                if (index === 0 || index === letters.length - 1) {
+                    return `<span class="font-extrabold text-indigo-400 mx-0.5">${char}</span>`;
+                }
+                return `<span class="text-slate-600 mx-0.5">_</span>`;
+            });
+
+            hintContainer.innerHTML = `文字数: <span class="text-slate-300 font-bold">${word.length}文字</span> &nbsp;&nbsp;&nbsp; ヒント: ${textParts.join(' ')}`;
+        }
+
+        // ANSWER EVALUATORS
+        function submitChoiceAnswer(selectedAnswer, clickedBtn) {
+            if (!appState.isAnsweringAllowed) return;
+            appState.isAnsweringAllowed = false;
+
+            const currentItem = appState.quizQuestions[appState.currentQuizIdx];
+            const correctValue = appState.quizFormat === 'eng-to-jap' ? currentItem.japanese : currentItem.english;
+            const isCorrect = selectedAnswer === correctValue;
+
+            triggerAnswerFeedback(isCorrect, currentItem, clickedBtn);
+        }
+
+        function submitSpellingAnswer() {
+            if (!appState.isAnsweringAllowed) return;
+            
+            const typedInput = document.getElementById('quiz-spell-input').value.trim().toLowerCase();
+            if (typedInput === '') return;
+
+            appState.isAnsweringAllowed = false;
+
+            const currentItem = appState.quizQuestions[appState.currentQuizIdx];
+            const isCorrect = typedInput === currentItem.english.toLowerCase();
+
+            const inputEl = document.getElementById('quiz-spell-input');
+            triggerAnswerFeedback(isCorrect, currentItem, inputEl);
+        }
+
+        // Unified Feedback Engine
+        function triggerAnswerFeedback(isCorrect, wordItem, activeElement) {
+            const feedback = document.getElementById('instant-feedback');
+            const icon = document.getElementById('feedback-icon');
+            const msg = document.getElementById('feedback-message');
+
+            const userStats = appState.stats[wordItem.english] || { correctCount: 0, wrongCount: 0, mastered: false };
+
+            feedback.classList.remove('hidden');
+
+            if (isCorrect) {
+                // Correct Flow
+                playSound('correct');
+                userStats.correctCount++;
+                if (userStats.correctCount >= 3) {
+                    userStats.mastered = true;
+                }
+                
+                feedback.className = "text-center py-3.5 rounded-xl font-bold text-sm border bg-emerald-950/40 border-emerald-500/40 text-emerald-400 flex items-center justify-center space-x-2";
+                icon.className = "fa-solid fa-circle-check";
+                msg.textContent = "正解です！";
+
+                if (activeElement) {
+                    if (activeElement.tagName === 'INPUT') {
+                        activeElement.classList.add('border-emerald-500');
+                    } else {
+                        activeElement.classList.add('bg-emerald-950/30', 'border-emerald-500/50');
+                    }
+                }
+                
+                appState.quizScore++;
+            } else {
+                // Incorrection Flow
+                playSound('wrong');
+                userStats.wrongCount++;
+                userStats.mastered = false; // drop mastery back to zero
+                
+                feedback.className = "text-center py-3.5 rounded-xl font-bold text-sm border bg-pink-950/40 border-pink-500/40 text-pink-400 flex items-center justify-center space-x-2";
+                icon.className = "fa-solid fa-triangle-exclamation";
+                msg.textContent = `不正解！ 正解: ${appState.quizFormat === 'eng-to-jap' ? wordItem.japanese : wordItem.english}`;
+
+                if (activeElement) {
+                    if (activeElement.tagName === 'INPUT') {
+                        activeElement.classList.add('border-pink-500');
+                    } else {
+                        activeElement.classList.add('bg-pink-950/30', 'border-pink-500/50');
+                    }
+                }
+
+                // Append to re-review list
+                appState.wrongAnswers.push(wordItem);
+            }
+
+            appState.stats[wordItem.english] = userStats;
+            saveUserData();
+
+            // Timeout before advancing to next question
+            setTimeout(() => {
+                appState.currentQuizIdx++;
+                renderQuizQuestion();
+            }, 1800);
+        }
+
+        // TERMINATION & REVIEW
+        function finishQuiz() {
+            document.getElementById('quiz-active-view').classList.add('hidden');
+            document.getElementById('quiz-result-view').classList.remove('hidden');
+
+            const total = appState.quizQuestions.length;
+            const score = appState.quizScore;
+            const scorePercent = Math.round((score / total) * 100);
+
+            document.getElementById('result-score-percent').textContent = `${scorePercent}%`;
+            document.getElementById('result-score-fraction').textContent = `${score} / ${total}`;
+
+            // Medal visual based on results
+            const medal = document.getElementById('result-medal');
+            if (scorePercent === 100) {
+                medal.className = "fa-solid fa-crown text-yellow-400 text-5xl animate-bounce";
+                playSound('victory');
+                // Celebrate with beautiful confetti
+                triggerFullConfetti();
+            } else if (scorePercent >= 80) {
+                medal.className = "fa-solid fa-medal text-slate-300 text-5xl";
+                playSound('victory');
+            } else if (scorePercent >= 50) {
+                medal.className = "fa-solid fa-award text-amber-600 text-5xl";
+            } else {
+                medal.className = "fa-solid fa-face-rolling-eyes text-slate-500 text-5xl";
+            }
+
+            // Wrong list reviews
+            const wrongBox = document.getElementById('result-wrong-box');
+            const wrongUl = document.getElementById('result-wrong-list');
+            const retryWrongBtn = document.getElementById('retry-wrong-btn');
+
+            if (appState.wrongAnswers.length > 0) {
+                wrongBox.classList.remove('hidden');
+                retryWrongBtn.classList.remove('hidden');
+                wrongUl.innerHTML = '';
+                
+                appState.wrongAnswers.forEach(word => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `<span class="font-extrabold text-slate-200">${word.english}</span> &mdash; ${word.japanese}`;
+                    wrongUl.appendChild(li);
+                });
+            } else {
+                wrongBox.classList.add('hidden');
+                retryWrongBtn.classList.add('hidden');
+            }
+        }
+
+        function retryWrongQuiz() {
+            if (appState.wrongAnswers.length === 0) return;
+            
+            // Set up state using ONLY wrong answers from previous run
+            appState.quizQuestions = [...appState.wrongAnswers].sort(() => 0.5 - Math.random());
+            appState.currentQuizIdx = 0;
+            appState.quizScore = 0;
+            appState.wrongAnswers = [];
+            appState.isAnsweringAllowed = true;
+
+            document.getElementById('quiz-result-view').classList.add('hidden');
+            document.getElementById('quiz-active-view').classList.remove('hidden');
+
+            renderQuizQuestion();
+        }
+
+        function exitActiveQuiz() {
+            document.getElementById('quiz-active-view').classList.add('hidden');
+            document.getElementById('quiz-result-view').classList.add('hidden');
+            document.getElementById('quiz-config-view').classList.remove('hidden');
+        }
+
+        function triggerFullConfetti() {
+            const duration = 2.5 * 1000;
+            const end = Date.now() + duration;
+
+            (function frame() {
+                confetti({
+                    particleCount: 4,
+                    angle: 60,
+                    spread: 55,
+                    origin: { x: 0 },
+                    colors: ['#6366f1', '#a855f7', '#ec4899', '#3b82f6']
+                });
+                confetti({
+                    particleCount: 4,
+                    angle: 120,
+                    spread: 55,
+                    origin: { x: 1 },
+                    colors: ['#6366f1', '#a855f7', '#ec4899', '#3b82f6']
+                });
+
+                if (Date.now() < end) {
+                    requestAnimationFrame(frame);
+                }
+            }());
+        }
+
+        // Helper global notification banner
+        function showBannerMessage(text, type) {
+            const div = document.createElement('div');
+            div.className = "fixed top-5 left-1/2 -translate-x-1/2 bg-slate-900 border border-indigo-500/30 py-3 px-6 rounded-2xl z-50 text-xs font-bold text-indigo-300 shadow-2xl flex items-center space-x-2 animate-bounce";
+            div.innerHTML = `<i class="fa-solid fa-circle-info"></i> <span>${text}</span>`;
+            document.body.appendChild(div);
+            
+            setTimeout(() => {
+                div.remove();
+            }, 3000);
+        }
+
+        function speakQuizWord() {
+            const currentItem = appState.quizQuestions[appState.currentQuizIdx];
+            if (currentItem) {
+                speak(currentItem.english);
+            }
+        }
+    </script>
+</body>
+</html>

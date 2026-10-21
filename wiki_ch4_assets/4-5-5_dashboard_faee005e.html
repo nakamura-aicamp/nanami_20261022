@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>売上分析ダッシュボード 2026年4月</title>
+  <style>
+    :root {
+      --bg: #f7f7f5;
+      --surface: #ffffff;
+      --border: #e5e5e2;
+      --text-main: #1a1a18;
+      --text-sub: #6b6b65;
+      --accent: #2563eb;
+      --accent-light: #eff4ff;
+      --warn: #d97706;
+      --warn-light: #fffbeb;
+      --danger: #dc2626;
+      --danger-light: #fef2f2;
+      --green: #16a34a;
+      --green-light: #f0fdf4;
+      --font: 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text-main);
+      font-family: var(--font);
+      font-size: 14px;
+      line-height: 1.6;
+      padding: 24px 20px 60px;
+      max-width: 1060px;
+      margin: 0 auto;
+    }
+
+    /* ヘッダー */
+    .header {
+      border-bottom: 2px solid var(--text-main);
+      padding-bottom: 14px;
+      margin-bottom: 24px;
+    }
+    .header-meta { color: var(--text-sub); font-size: 12px; margin-bottom: 4px; }
+    .header h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.3px; }
+    .header-note { font-size: 12px; color: var(--text-sub); margin-top: 6px; }
+
+    /* 概要カード */
+    .kpi-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+    .kpi {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 16px 18px;
+    }
+    .kpi-label { font-size: 11px; color: var(--text-sub); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+    .kpi-value { font-size: 26px; font-weight: 700; line-height: 1; }
+    .kpi-sub { font-size: 11px; color: var(--text-sub); margin-top: 4px; }
+    .kpi.accent { border-top: 3px solid var(--accent); }
+
+    /* セクション */
+    .section { margin-bottom: 32px; }
+    .section-title {
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .badge {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 99px;
+      display: inline-block;
+    }
+    .badge-blue { background: var(--accent-light); color: var(--accent); }
+    .badge-red  { background: var(--danger-light); color: var(--danger); }
+    .badge-green{ background: var(--green-light);  color: var(--green); }
+    .badge-warn { background: var(--warn-light);   color: var(--warn); }
+
+    /* テーブル共通 */
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    thead th {
+      background: #f2f2ef;
+      text-align: left;
+      padding: 8px 10px;
+      font-size: 11px;
+      color: var(--text-sub);
+      font-weight: 600;
+      border-bottom: 1px solid var(--border);
+    }
+    tbody tr { border-bottom: 1px solid var(--border); }
+    tbody tr:last-child { border-bottom: none; }
+    tbody td { padding: 9px 10px; vertical-align: top; }
+    tbody tr:hover { background: #f9f9f7; }
+    .tbl-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+
+    /* 数値 */
+    .num { text-align: right; font-variant-numeric: tabular-nums; }
+    .rank { font-weight: 700; color: var(--text-sub); width: 28px; }
+    .tag { font-size: 11px; color: var(--text-sub); }
+
+    /* アラートバー */
+    .alert-bar {
+      border-radius: 6px;
+      padding: 10px 14px;
+      font-size: 13px;
+      margin-bottom: 8px;
+      border-left: 4px solid;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+    .alert-bar.warn  { background: var(--warn-light);   border-color: var(--warn);   }
+    .alert-bar.danger{ background: var(--danger-light); border-color: var(--danger); }
+    .alert-bar.info  { background: var(--accent-light); border-color: var(--accent); }
+    .alert-icon { font-weight: 700; min-width: 20px; }
+    .alert-body strong { font-weight: 700; }
+
+    /* 打ち手リスト */
+    .action-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+    .action-item {
+      display: grid;
+      grid-template-columns: 56px 1fr;
+      gap: 10px;
+      align-items: start;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 12px 14px;
+    }
+    .action-pri { font-size: 11px; font-weight: 700; text-align: center; border-radius: 4px; padding: 3px 6px; }
+    .action-pri.p1 { background: var(--danger-light); color: var(--danger); }
+    .action-pri.p2 { background: var(--warn-light);   color: var(--warn); }
+    .action-pri.p3 { background: var(--accent-light); color: var(--accent); }
+    .action-text strong { font-weight: 700; display: block; margin-bottom: 2px; }
+    .action-text p { font-size: 12px; color: var(--text-sub); }
+
+    /* 注意事項 */
+    .notice {
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 14px 16px;
+      background: #f9f9f7;
+      font-size: 12px;
+      color: var(--text-sub);
+      line-height: 1.7;
+    }
+    .notice strong { color: var(--text-main); }
+
+    /* グリッドレイアウト（2カラム） */
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
+    /* 粗利棒グラフ簡易 */
+    .bar-row { display: flex; align-items: center; gap: 8px; padding: 5px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+    .bar-row:last-child { border-bottom: none; }
+    .bar-label { width: 200px; flex-shrink: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .bar-track { flex: 1; height: 10px; background: #eee; border-radius: 99px; overflow: hidden; }
+    .bar-fill  { height: 100%; border-radius: 99px; background: var(--accent); }
+    .bar-val   { width: 70px; text-align: right; font-variant-numeric: tabular-nums; font-size: 12px; color: var(--text-sub); }
+
+    @media (max-width: 700px) {
+      .kpi-row { grid-template-columns: 1fr 1fr; }
+      .two-col { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ===== ヘッダー ===== -->
+<div class="header">
+  <div class="header-meta">2026年5月28日作成 ／ 対象期間：2026年4月（2026-04-01 〜 2026-04-30）</div>
+  <h1>売上分析ダッシュボード ― 2026年4月</h1>
+  <div class="header-note">
+    分析観点：AIキャンプ伊藤清夏（元雑貨屋商品部部長・バイヤー）のフレームワークをベースに構成。
+    入力CSVの数値のみを根拠とし、CSVにない数値は使用しない。
+    ※ 本ダッシュボードは架空データを使用した練習用分析です。実在の企業・顧客データは含みません。
+  </div>
+</div>
+
+<!-- ===== 概要カード ===== -->
+<div class="kpi-row">
+  <div class="kpi accent">
+    <div class="kpi-label">月間売上合計</div>
+    <div class="kpi-value">¥520,430</div>
+    <div class="kpi-sub">取引レシート数: 300件</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">月間粗利合計</div>
+    <div class="kpi-value">¥263,520</div>
+    <div class="kpi-sub">粗利率: 50.6%</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">販売商品SKU数</div>
+    <div class="kpi-value">42</div>
+    <div class="kpi-sub">総販売数量: 約333個</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">前月比較</div>
+    <div class="kpi-value" style="font-size:16px;color:var(--text-sub);">データなし</div>
+    <div class="kpi-sub">CSVに前月売上列なし</div>
+  </div>
+</div>
+
+<!-- ===== 在庫アラート ===== -->
+<div class="section">
+  <div class="section-title">在庫アラート <span class="badge badge-red">要確認</span></div>
+  <div class="alert-bar danger">
+    <div class="alert-icon">!</div>
+    <div class="alert-body">
+      <strong>ZK-031 キャンバストートバッグ — 在庫残11個</strong>：月間14個売れた売れ筋商品。このペースだと1〜2週間で在庫切れになる可能性あり。緊急補充要検討。
+    </div>
+  </div>
+  <div class="alert-bar warn">
+    <div class="alert-icon">!</div>
+    <div class="alert-body">
+      <strong>ZK-020 ルームスプレー シトラス — 在庫残20個</strong>：粗利率60%の高収益商品で月間12個売れている。在庫補充を早めに検討。
+    </div>
+  </div>
+  <div class="alert-bar info">
+    <div class="alert-icon">i</div>
+    <div class="alert-body">
+      <strong>ZK-001 マグカップ 北欧柄 — 在庫残19個</strong>：月間8個販売。在庫推移に注意。
+    </div>
+  </div>
+</div>
+
+<!-- ===== 売れ筋商品 ===== -->
+<div class="section">
+  <div class="section-title">売れ筋商品 TOP5 <span class="badge badge-blue">売上・数量・粗利額 総合</span></div>
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th class="rank">#</th>
+          <th>商品名</th>
+          <th>カテゴリ</th>
+          <th class="num">販売数量</th>
+          <th class="num">売上金額</th>
+          <th class="num">粗利額</th>
+          <th class="num">粗利率</th>
+          <th class="num">在庫数</th>
+          <th>メモ</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="rank">1</td>
+          <td><strong>香りのギフトセット</strong><br><span class="tag">ZK-039</span></td>
+          <td>ギフト雑貨</td>
+          <td class="num">15個</td>
+          <td class="num">¥42,000</td>
+          <td class="num">¥23,100</td>
+          <td class="num">55.0%</td>
+          <td class="num">112</td>
+          <td>売上・粗利とも断トツ1位。在庫も安定</td>
+        </tr>
+        <tr>
+          <td class="rank">2</td>
+          <td><strong>リードディフューザー ホワイトムスク</strong><br><span class="tag">ZK-021</span></td>
+          <td>アロマ・リラックス</td>
+          <td class="num">12個</td>
+          <td class="num">¥30,470</td>
+          <td class="num">¥16,650</td>
+          <td class="num">約54.7%</td>
+          <td class="num">74</td>
+          <td>2個まとめ買い取引あり。複数購入に強い</td>
+        </tr>
+        <tr>
+          <td class="rank">3</td>
+          <td><strong>UV折りたたみ傘</strong><br><span class="tag">ZK-034</span></td>
+          <td>ファッション小物</td>
+          <td class="num">11個</td>
+          <td class="num">¥28,600</td>
+          <td class="num">¥12,540</td>
+          <td class="num">43.8%</td>
+          <td class="num">97</td>
+          <td>単価高め。2個購入が複数回あり需要旺盛</td>
+        </tr>
+        <tr style="background:#fff8f8;">
+          <td class="rank">4</td>
+          <td><strong>キャンバストートバッグ</strong><br><span class="tag">ZK-031</span></td>
+          <td>ファッション小物</td>
+          <td class="num">14個</td>
+          <td class="num">¥27,420</td>
+          <td class="num">¥12,950</td>
+          <td class="num">約47.2%</td>
+          <td class="num" style="color:var(--danger);font-weight:700;">11 ⚠</td>
+          <td style="color:var(--danger);font-weight:600;">在庫残少！緊急補充を</td>
+        </tr>
+        <tr>
+          <td class="rank">5</td>
+          <td><strong>保存容器セット</strong><br><span class="tag">ZK-004</span></td>
+          <td>キッチン雑貨</td>
+          <td class="num">14個</td>
+          <td class="num">¥21,000</td>
+          <td class="num">¥9,180</td>
+          <td class="num">44.0%</td>
+          <td class="num">57</td>
+          <td>コンスタントに売れる定番品</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ===== 終売候補 ===== -->
+<div class="section">
+  <div class="section-title">終売候補 <span class="badge badge-red">販売数量・粗利額が低く在庫過多</span></div>
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>商品名</th>
+          <th>カテゴリ</th>
+          <th class="num">販売数量</th>
+          <th class="num">売上金額</th>
+          <th class="num">粗利額</th>
+          <th class="num">粗利率</th>
+          <th class="num">在庫数</th>
+          <th>終売検討理由</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>キーケース フェイクレザー</strong><br><span class="tag">ZK-036</span></td>
+          <td>ファッション小物</td>
+          <td class="num">2個</td>
+          <td class="num">¥3,600</td>
+          <td class="num">¥1,800</td>
+          <td class="num">50.0%</td>
+          <td class="num">59</td>
+          <td>月間2個のみ。全商品中 売上最低。在庫59個の消化に約30ヶ月かかる計算</td>
+        </tr>
+        <tr>
+          <td><strong>クッションカバー リネン</strong><br><span class="tag">ZK-013</span></td>
+          <td>インテリア雑貨</td>
+          <td class="num">2個</td>
+          <td class="num">¥4,800</td>
+          <td class="num">¥2,160</td>
+          <td class="num">45.0%</td>
+          <td class="num">122</td>
+          <td>月間2個のみ。在庫122個は異常に多く、回転率が極めて低い</td>
+        </tr>
+        <tr>
+          <td><strong>リネンキッチンクロス</strong><br><span class="tag">ZK-010</span></td>
+          <td>キッチン雑貨</td>
+          <td class="num">6個</td>
+          <td class="num">¥5,700</td>
+          <td class="num">¥3,000</td>
+          <td class="num">52.6%</td>
+          <td class="num">152</td>
+          <td>在庫152個は全商品中最多。月6個では消化に25ヶ月超かかる</td>
+        </tr>
+        <tr>
+          <td><strong>カラーペン 5本セット</strong><br><span class="tag">ZK-026</span></td>
+          <td>文具</td>
+          <td class="num">6個</td>
+          <td class="num">¥4,440</td>
+          <td class="num">¥2,220</td>
+          <td class="num">約50%</td>
+          <td class="num">144</td>
+          <td>在庫144個。値引き販売も複数あり需要の弱さが見える</td>
+        </tr>
+        <tr>
+          <td><strong>LEDミニライト</strong><br><span class="tag">ZK-015</span></td>
+          <td>インテリア雑貨</td>
+          <td class="num">5個</td>
+          <td class="num">¥4,950</td>
+          <td class="num">¥2,150</td>
+          <td class="num">43.4%</td>
+          <td class="num">41</td>
+          <td>粗利率43.4%は全商品中最低クラス。売上・粗利ともに低い</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ===== 粗利注目商品 + 全商品粗利バー ===== -->
+<div class="section">
+  <div class="section-title">粗利で見る注目商品 <span class="badge badge-green">粗利額・粗利率で再評価</span></div>
+  <div class="two-col">
+
+    <div>
+      <p style="font-size:12px;color:var(--text-sub);margin-bottom:10px;">月間粗利額 上位10商品（棒グラフ）</p>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:14px 16px;">
+        <!-- 最大値 23100 を基準 -->
+        <div class="bar-row"><span class="bar-label">香りのギフトセット</span><div class="bar-track"><div class="bar-fill" style="width:100%"></div></div><span class="bar-val">¥23,100</span></div>
+        <div class="bar-row"><span class="bar-label">リードディフューザー</span><div class="bar-track"><div class="bar-fill" style="width:72%"></div></div><span class="bar-val">¥16,650</span></div>
+        <div class="bar-row"><span class="bar-label">UV折りたたみ傘</span><div class="bar-track"><div class="bar-fill" style="width:54%"></div></div><span class="bar-val">¥12,540</span></div>
+        <div class="bar-row"><span class="bar-label">キャンバストートバッグ</span><div class="bar-track"><div class="bar-fill" style="width:56%"></div></div><span class="bar-val">¥12,950</span></div>
+        <div class="bar-row"><span class="bar-label">ルームスプレー シトラス</span><div class="bar-track"><div class="bar-fill" style="width:42%"></div></div><span class="bar-val">¥9,800</span></div>
+        <div class="bar-row"><span class="bar-label">保存容器セット</span><div class="bar-track"><div class="bar-fill" style="width:40%"></div></div><span class="bar-val">¥9,180</span></div>
+        <div class="bar-row"><span class="bar-label">ペアマグセット</span><div class="bar-track"><div class="bar-fill" style="width:36%"></div></div><span class="bar-val">¥8,400</span></div>
+        <div class="bar-row"><span class="bar-label">アートポスター A4</span><div class="bar-track"><div class="bar-fill" style="width:36%"></div></div><span class="bar-val">¥8,400</span></div>
+        <div class="bar-row"><span class="bar-label">刺繍ポーチ</span><div class="bar-track"><div class="bar-fill" style="width:35%"></div></div><span class="bar-val">¥8,110</span></div>
+        <div class="bar-row"><span class="bar-label">ステンレスボトル</span><div class="bar-track"><div class="bar-fill" style="width:35%"></div></div><span class="bar-val">¥8,010</span></div>
+      </div>
+    </div>
+
+    <div>
+      <p style="font-size:12px;color:var(--text-sub);margin-bottom:10px;">粗利率が高く注目すべき商品</p>
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr><th>商品名</th><th class="num">粗利率</th><th class="num">月間粗利額</th><th>コメント</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>アロマストーン セット</strong><br><span class="tag">ZK-023</span></td>
+              <td class="num" style="color:var(--green);font-weight:700;">61.8%</td>
+              <td class="num">¥5,380</td>
+              <td>全商品中 粗利率最高。月8個売れているが在庫142個あり、POP強化で販売数を上げたい</td>
+            </tr>
+            <tr>
+              <td><strong>ルームスプレー シトラス</strong><br><span class="tag">ZK-020</span></td>
+              <td class="num" style="color:var(--green);font-weight:700;">60.0%</td>
+              <td class="num">¥9,800</td>
+              <td>粗利率60%で月12個の高回転。在庫20個のみ。優先的に補充を</td>
+            </tr>
+            <tr>
+              <td><strong>アロマキャンドル ラベンダー</strong><br><span class="tag">ZK-019</span></td>
+              <td class="num" style="color:var(--green);font-weight:700;">58.8%</td>
+              <td class="num">¥6,580</td>
+              <td>高粗利率。在庫33個と少なめ。アロマゾーンでの関連陳列で売れ行き拡大の余地あり</td>
+            </tr>
+            <tr>
+              <td><strong>香りのギフトセット</strong><br><span class="tag">ZK-039</span></td>
+              <td class="num">55.0%</td>
+              <td class="num">¥23,100</td>
+              <td>売上1位 かつ粗利も断トツ。売上・粗利の両面でNo.1稼ぎ頭</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ===== 次の打ち手 ===== -->
+<div class="section">
+  <div class="section-title">次の打ち手 <span class="badge badge-warn">優先度順</span></div>
+  <ul class="action-list">
+    <li class="action-item">
+      <div class="action-pri p1">優先度<br>最高</div>
+      <div class="action-text">
+        <strong>ZK-031 キャンバストートバッグの緊急補充発注を確認する</strong>
+        <p>月間14個売れた売れ筋商品なのに在庫残11個。このペースでは早急に欠品する。発注リードタイムを確認し、在庫が5個以下になる前に補充を完了させる。</p>
+      </div>
+    </li>
+    <li class="action-item">
+      <div class="action-pri p1">優先度<br>最高</div>
+      <div class="action-text">
+        <strong>ZK-020 ルームスプレー シトラスの補充発注を優先する</strong>
+        <p>粗利率60%・月12個売れる高収益品なのに在庫20個のみ。2個まとめ買い取引が複数回あり需要は旺盛。早期に補充しないと利益機会を損失する。</p>
+      </div>
+    </li>
+    <li class="action-item">
+      <div class="action-pri p2">優先度<br>高</div>
+      <div class="action-text">
+        <strong>ZK-039 香りのギフトセットの売場フェイスを拡充する</strong>
+        <p>月間売上¥42,000・粗利¥23,100は全商品中ダントツの稼ぎ頭。在庫112個あり潤沢。売場の視認性を高め（フェイス増・POP追加）、さらなる販売数の積み上げを狙う。</p>
+      </div>
+    </li>
+    <li class="action-item">
+      <div class="action-pri p2">優先度<br>高</div>
+      <div class="action-text">
+        <strong>ZK-023 アロマストーン セットの陳列・販促を見直す</strong>
+        <p>粗利率61.8%は全商品最高だが月間売上¥8,740にとどまる。在庫142個と潤沢。アロマコーナーでZK-021やZK-019と関連陳列し客単価アップを図る。</p>
+      </div>
+    </li>
+    <li class="action-item">
+      <div class="action-pri p3">優先度<br>通常</div>
+      <div class="action-text">
+        <strong>ZK-036 キーケース フェイクレザー・ZK-013 クッションカバー リネンの処分方針を決める</strong>
+        <p>月間それぞれ2個しか売れず、在庫59個・122個と在庫負担が大きい。値引き処分（セールビン投入等）か取扱い終了かを本部と協議し、在庫圧縮計画を立てる。</p>
+      </div>
+    </li>
+    <li class="action-item">
+      <div class="action-pri p3">優先度<br>通常</div>
+      <div class="action-text">
+        <strong>ZK-010 リネンキッチンクロスの在庫圧縮計画を立てる</strong>
+        <p>在庫152個は全商品最多にもかかわらず月6個しか売れない。束売り（2枚セット等）やノベルティ活用など追加施策を検討する。</p>
+      </div>
+    </li>
+  </ul>
+</div>
+
+<!-- ===== 追加で確認したいデータ ===== -->
+<div class="section">
+  <div class="section-title">追加で確認したいデータ <span class="badge badge-blue">優先度順</span></div>
+  <ul class="action-list">
+    <li class="action-item">
+      <div class="action-pri p1">優先度<br>最高</div>
+      <div class="action-text">
+        <strong>前月（2026年3月）の商品別売上データ</strong>
+        <p>今回のCSVに「前月売上」列が存在しないため、前月比の増減が一切判断できない。特にUV折りたたみ傘（季節商材の可能性）、香りのギフトセット（ギフトシーズン需要）の月次トレンドを把握するために必要。</p>
+      </div>
+    </li>
+    <li class="action-item">
+      <div class="action-pri p2">優先度<br>高</div>
+      <div class="action-text">
+        <strong>商品別の発注リードタイム・最小発注数</strong>
+        <p>ZK-031キャンバストートバッグ（在庫11個）・ZK-020ルームスプレー（在庫20個）の補充判断に不可欠。リードタイムが不明では安全在庫水準を設定できない。</p>
+      </div>
+    </li>
+  </ul>
+</div>
+
+<!-- ===== 全商品一覧 ===== -->
+<div class="section">
+  <div class="section-title">全商品 月間集計一覧</div>
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>商品ID</th>
+          <th>商品名</th>
+          <th>カテゴリ</th>
+          <th class="num">販売数量</th>
+          <th class="num">月間売上</th>
+          <th class="num">月間粗利額</th>
+          <th class="num">粗利率(概算)</th>
+          <th class="num">月末在庫数</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>ZK-039</td><td>香りのギフトセット</td><td>ギフト雑貨</td><td class="num">15</td><td class="num">¥42,000</td><td class="num">¥23,100</td><td class="num">55.0%</td><td class="num">112</td></tr>
+        <tr><td>ZK-021</td><td>リードディフューザー ホワイトムスク</td><td>アロマ・リラックス</td><td class="num">12</td><td class="num">¥30,470</td><td class="num">¥16,650</td><td class="num">54.7%</td><td class="num">74</td></tr>
+        <tr><td>ZK-034</td><td>UV折りたたみ傘</td><td>ファッション小物</td><td class="num">11</td><td class="num">¥28,600</td><td class="num">¥12,540</td><td class="num">43.8%</td><td class="num">97</td></tr>
+        <tr style="background:#fff5f5;"><td>ZK-031</td><td><strong>キャンバストートバッグ ⚠</strong></td><td>ファッション小物</td><td class="num">14</td><td class="num">¥27,420</td><td class="num">¥12,950</td><td class="num">47.2%</td><td class="num" style="color:var(--danger);font-weight:700;">11</td></tr>
+        <tr><td>ZK-004</td><td>保存容器セット</td><td>キッチン雑貨</td><td class="num">14</td><td class="num">¥21,000</td><td class="num">¥9,180</td><td class="num">44.0%</td><td class="num">57</td></tr>
+        <tr><td>ZK-002</td><td>ステンレスボトル 350ml</td><td>キッチン雑貨</td><td class="num">9</td><td class="num">¥17,820</td><td class="num">¥8,010</td><td class="num">44.9%</td><td class="num">40</td></tr>
+        <tr><td>ZK-041</td><td>ペアマグセット</td><td>ギフト雑貨</td><td class="num">7</td><td class="num">¥16,800</td><td class="num">¥8,400</td><td class="num">50.0%</td><td class="num">103</td></tr>
+        <tr style="background:#fff8f5;"><td>ZK-020</td><td><strong>ルームスプレー シトラス ⚠</strong></td><td>アロマ・リラックス</td><td class="num">12</td><td class="num">¥16,520</td><td class="num">¥9,800</td><td class="num">60.0%</td><td class="num" style="color:var(--warn);font-weight:700;">20</td></tr>
+        <tr><td>ZK-035</td><td>刺繍ポーチ</td><td>ファッション小物</td><td class="num">12</td><td class="num">¥16,190</td><td class="num">¥8,110</td><td class="num">50.7%</td><td class="num">147</td></tr>
+        <tr><td>ZK-018</td><td>アートポスター A4</td><td>インテリア雑貨</td><td class="num">10</td><td class="num">¥14,700</td><td class="num">¥8,400</td><td class="num">57.1%</td><td class="num">48</td></tr>
+        <tr><td>ZK-014</td><td>収納バスケット S</td><td>インテリア雑貨</td><td class="num">11</td><td class="num">¥14,120</td><td class="num">¥6,860</td><td class="num">48.6%</td><td class="num">112</td></tr>
+        <tr><td>ZK-005</td><td>ランチバッグ 保冷タイプ</td><td>キッチン雑貨</td><td class="num">10</td><td class="num">¥14,400</td><td class="num">¥7,700</td><td class="num">48.1%</td><td class="num">108</td></tr>
+        <tr><td>ZK-037</td><td>ミニ財布 コンパクト</td><td>ファッション小物</td><td class="num">5</td><td class="num">¥14,000</td><td class="num">¥6,300</td><td class="num">45.0%</td><td class="num">37</td></tr>
+        <tr><td>ZK-038</td><td>ヘアクリップ マーブル</td><td>ファッション小物</td><td class="num">15</td><td class="num">¥13,460</td><td class="num">¥7,610</td><td class="num">56.5%</td><td class="num">60</td></tr>
+        <tr><td>ZK-016</td><td>ウォールミラー ラウンド</td><td>インテリア雑貨</td><td class="num">4</td><td class="num">¥12,640</td><td class="num">¥5,480</td><td class="num">43.4%</td><td class="num">108</td></tr>
+        <tr><td>ZK-019</td><td>アロマキャンドル ラベンダー</td><td>アロマ・リラックス</td><td class="num">7</td><td class="num">¥11,200</td><td class="num">¥6,580</td><td class="num">58.8%</td><td class="num">33</td></tr>
+        <tr><td>ZK-012</td><td>フラワーベース ガラス</td><td>インテリア雑貨</td><td class="num">5</td><td class="num">¥11,000</td><td class="num">¥5,300</td><td class="num">48.2%</td><td class="num">80</td></tr>
+        <tr><td>ZK-040</td><td>ミニブーケ 造花</td><td>ギフト雑貨</td><td class="num">9</td><td class="num">¥10,740</td><td class="num">¥5,970</td><td class="num">55.6%</td><td class="num">23</td></tr>
+        <tr><td>ZK-042</td><td>ハンドタオルセット</td><td>ギフト雑貨</td><td class="num">7</td><td class="num">¥10,720</td><td class="num">¥5,470</td><td class="num">51.0%</td><td class="num">146</td></tr>
+        <tr><td>ZK-006</td><td>ガラスキャニスター</td><td>キッチン雑貨</td><td class="num">8</td><td class="num">¥10,800</td><td class="num">¥5,360</td><td class="num">49.6%</td><td class="num">102</td></tr>
+        <tr><td>ZK-029</td><td>ブックカバー 文庫サイズ</td><td>文具</td><td class="num">12</td><td class="num">¥10,780</td><td class="num">¥5,240</td><td class="num">48.6%</td><td class="num">39</td></tr>
+        <tr><td>ZK-008</td><td>プレート 20cm アイボリー</td><td>キッチン雑貨</td><td class="num">8</td><td class="num">¥10,400</td><td class="num">¥5,280</td><td class="num">50.8%</td><td class="num">25</td></tr>
+        <tr><td>ZK-017</td><td>デスククロック 木目</td><td>インテリア雑貨</td><td class="num">4</td><td class="num">¥10,400</td><td class="num">¥4,680</td><td class="num">45.0%</td><td class="num">131</td></tr>
+        <tr><td>ZK-024</td><td>ネックピロー 低反発</td><td>アロマ・リラックス</td><td class="num">4</td><td class="num">¥9,600</td><td class="num">¥4,800</td><td class="num">50.0%</td><td class="num">54</td></tr>
+        <tr><td>ZK-001</td><td>マグカップ 北欧柄</td><td>キッチン雑貨</td><td class="num">8</td><td class="num">¥9,480</td><td class="num">¥4,680</td><td class="num">49.4%</td><td class="num" style="color:var(--warn);">19</td></tr>
+        <tr><td>ZK-028</td><td>デスクトレー 木製</td><td>文具</td><td class="num">5</td><td class="num">¥9,000</td><td class="num">¥4,400</td><td class="num">48.9%</td><td class="num">64</td></tr>
+        <tr><td>ZK-032</td><td>今治ハンカチ</td><td>ファッション小物</td><td class="num">12</td><td class="num">¥9,000</td><td class="num">¥4,920</td><td class="num">54.7%</td><td class="num">73</td></tr>
+        <tr><td>ZK-023</td><td>アロマストーン セット</td><td>アロマ・リラックス</td><td class="num">8</td><td class="num">¥8,740</td><td class="num">¥5,380</td><td class="num">61.6%</td><td class="num">142</td></tr>
+        <tr><td>ZK-007</td><td>コーヒードリッパー 陶器</td><td>キッチン雑貨</td><td class="num">4</td><td class="num">¥8,800</td><td class="num">¥4,040</td><td class="num">45.9%</td><td class="num">65</td></tr>
+        <tr><td>ZK-027</td><td>ペンケース 帆布</td><td>文具</td><td class="num">7</td><td class="num">¥8,340</td><td class="num">¥4,140</td><td class="num">49.6%</td><td class="num">82</td></tr>
+        <tr><td>ZK-025</td><td>A5ノート ドット方眼</td><td>文具</td><td class="num">15</td><td class="num">¥8,190</td><td class="num">¥4,440</td><td class="num">54.2%</td><td class="num">40</td></tr>
+        <tr><td>ZK-033</td><td>リブソックス</td><td>ファッション小物</td><td class="num">9</td><td class="num">¥7,610</td><td class="num">¥3,830</td><td class="num">50.3%</td><td class="num">134</td></tr>
+        <tr><td>ZK-022</td><td>アイピロー あずき</td><td>アロマ・リラックス</td><td class="num">4</td><td class="num">¥7,110</td><td class="num">¥3,870</td><td class="num">54.4%</td><td class="num">80</td></tr>
+        <tr><td>ZK-003</td><td>木製カトラリーセット</td><td>キッチン雑貨</td><td class="num">8</td><td class="num">¥7,040</td><td class="num">¥3,680</td><td class="num">52.3%</td><td class="num">85</td></tr>
+        <tr><td>ZK-030</td><td>クリップボード A4</td><td>文具</td><td class="num">7</td><td class="num">¥6,210</td><td class="num">¥3,130</td><td class="num">50.4%</td><td class="num">102</td></tr>
+        <tr><td>ZK-009</td><td>シリコン鍋つかみ</td><td>キッチン雑貨</td><td class="num">8</td><td class="num">¥6,240</td><td class="num">¥3,360</td><td class="num">53.8%</td><td class="num">89</td></tr>
+        <tr><td>ZK-011</td><td>フォトフレーム ウッド</td><td>インテリア雑貨</td><td class="num">3</td><td class="num">¥5,400</td><td class="num">¥2,550</td><td class="num">47.2%</td><td class="num">129</td></tr>
+        <tr><td>ZK-010</td><td>リネンキッチンクロス</td><td>キッチン雑貨</td><td class="num">6</td><td class="num">¥5,700</td><td class="num">¥3,000</td><td class="num">52.6%</td><td class="num" style="color:var(--danger);">152</td></tr>
+        <tr><td>ZK-013</td><td>クッションカバー リネン</td><td>インテリア雑貨</td><td class="num">2</td><td class="num">¥4,800</td><td class="num">¥2,160</td><td class="num">45.0%</td><td class="num" style="color:var(--danger);">122</td></tr>
+        <tr><td>ZK-015</td><td>LEDミニライト</td><td>インテリア雑貨</td><td class="num">5</td><td class="num">¥4,950</td><td class="num">¥2,150</td><td class="num">43.4%</td><td class="num">41</td></tr>
+        <tr><td>ZK-026</td><td>カラーペン 5本セット</td><td>文具</td><td class="num">6</td><td class="num">¥4,440</td><td class="num">¥2,220</td><td class="num">50.0%</td><td class="num" style="color:var(--danger);">144</td></tr>
+        <tr><td>ZK-036</td><td>キーケース フェイクレザー</td><td>ファッション小物</td><td class="num">2</td><td class="num">¥3,600</td><td class="num">¥1,800</td><td class="num">50.0%</td><td class="num">59</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ===== 利用上の注意 ===== -->
+<div class="section">
+  <div class="section-title">利用上の注意</div>
+  <div class="notice">
+    <strong>架空データによる練習用分析です。</strong>本ダッシュボードはAIキャンプ学習用の架空データを使って分析したものであり、実在する企業・顧客・商品の情報を含みません。<br>
+    分析はすべて入力CSVの数値（売上金額・数量・粗利額・在庫数）のみを根拠にしています。CSVにない情報（前月売上・発注リードタイム等）は使用していません。<br>
+    粗利額は各レシート行の「粗利額」列（= 売上金額 − 原価単価 × 数量）を商品別に合算しています。<br>
+    本ファイルは <strong>sales_analysis/outputs/</strong> に保存されています。月次サマリーは <strong>summary.md</strong> を参照してください。
+  </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,1040 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>カラフル社内席替えアプリ - 3D★SHUFFLE</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    
+    <style>
+        /* カスタムアニメーション */
+        @keyframes shake {
+            0%, 100% { transform: rotate(0deg) scale(1); }
+            25% { transform: rotate(-2deg) scale(0.98); }
+            75% { transform: rotate(2deg) scale(1.02); }
+        }
+        .animate-shake {
+            animation: shake 0.15s ease-in-out infinite;
+        }
+        @keyframes pop {
+            0% { transform: scale(0.9); opacity: 0; }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .animate-pop {
+            animation: pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+        /* スロット回転風のフェードアウト・イン */
+        @keyframes slot-roll {
+            0% { transform: translateY(-10px); opacity: 0; }
+            50% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(10px); opacity: 0; }
+        }
+        .animate-slot {
+            animation: slot-roll 0.08s linear infinite;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-tr from-slate-900 via-indigo-950 to-slate-900 min-h-screen text-slate-100 font-sans pb-12">
+
+    <!-- メインコンテナ -->
+    <div class="max-w-6xl mx-auto px-4 py-8">
+        
+        <!-- ヘッダー -->
+        <header class="text-center mb-10 relative">
+            <div class="inline-block bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 text-transparent bg-clip-text">
+                <h1 class="text-4xl md:text-5xl font-black tracking-widest uppercase mb-2 flex items-center justify-center gap-3">
+                    <i data-lucide="layout-grid" class="text-pink-500 animate-bounce"></i>
+                    オフィス席替え 3D★SHUFFLE
+                </h1>
+            </div>
+            <p class="text-slate-400 text-sm md:text-base mt-2">
+                ドラッグ＆ドロップ、または2回タップして直感的に席替え！スロット演出とハッピーサウンドで最高のオフィスを作ろう！
+            </p>
+        </header>
+
+        <!-- コントロールパネル -->
+        <section class="bg-slate-800/80 border border-slate-700/50 rounded-2xl p-4 md:p-6 mb-8 backdrop-blur-md shadow-2xl flex flex-col md:flex-row gap-4 items-center justify-between">
+            <!-- メインシャッフルボタン -->
+            <div class="flex flex-wrap gap-3 w-full md:w-auto justify-center">
+                <button id="btn-shuffle-all" class="relative group overflow-hidden bg-gradient-to-r from-pink-500 via-purple-600 to-indigo-500 hover:from-pink-600 hover:to-indigo-600 text-white font-extrabold text-lg px-8 py-4 rounded-xl shadow-[0_0_20px_rgba(236,72,153,0.3)] transition-all duration-300 hover:scale-105 active:scale-95 flex items-center gap-2">
+                    <span class="absolute inset-0 w-full h-full bg-white/20 transform -skew-x-12 -translate-x-full group-hover:animate-shine"></span>
+                    <i data-lucide="shuffle" class="w-6 h-6 animate-spin-slow"></i>
+                    全員シャッフル！
+                </button>
+                <button id="btn-shuffle-islands" class="bg-slate-700 hover:bg-slate-600 border border-slate-600 text-slate-100 font-bold px-5 py-4 rounded-xl transition-all hover:scale-105 active:scale-95 flex items-center gap-2" title="各島にいるメンバーの席位置だけをシャッフルします">
+                    <i data-lucide="repeat" class="w-5 h-5 text-emerald-400"></i>
+                    島内シャッフル
+                </button>
+            </div>
+
+            <!-- サポート操作ボタン -->
+            <div class="flex flex-wrap gap-2 w-full md:w-auto justify-center">
+                <button id="btn-undo" class="bg-slate-700/50 hover:bg-slate-700 border border-slate-600 text-slate-300 hover:text-white px-4 py-2.5 rounded-lg transition flex items-center gap-1.5 text-sm" disabled>
+                    <i data-lucide="undo-2" class="w-4 h-4"></i>
+                    一歩戻す (Undo)
+                </button>
+                <button id="btn-reset-seats" class="bg-slate-700/50 hover:bg-slate-700 border border-slate-600 text-slate-300 hover:text-white px-4 py-2.5 rounded-lg transition flex items-center gap-1.5 text-sm">
+                    <i data-lucide="eraser" class="w-4 h-4"></i>
+                    席を空にする
+                </button>
+                <button id="btn-restore-default" class="bg-slate-700/50 hover:bg-slate-700 border border-slate-600 text-slate-300 hover:text-white px-4 py-2.5 rounded-lg transition flex items-center gap-1.5 text-sm">
+                    <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+                    初期データに戻す
+                </button>
+            </div>
+        </section>
+
+        <!-- メイン座席配置エリア（4つの島） -->
+        <main id="office-floor" class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
+            <!-- 島A: サクラ (ピンク系) -->
+            <div class="island-card bg-slate-800/40 border-2 border-pink-500/30 rounded-3xl p-6 backdrop-blur-sm shadow-xl relative overflow-hidden transition-all duration-300" data-island="A">
+                <div class="absolute -top-10 -right-10 w-32 h-32 bg-pink-500/10 rounded-full blur-2xl"></div>
+                <div class="flex justify-between items-center mb-4 border-b border-pink-500/20 pb-2">
+                    <h3 class="text-xl font-bold text-pink-400 flex items-center gap-2">
+                        <span class="w-3 h-3 rounded-full bg-pink-500 animate-pulse"></span>
+                        🌸 サクラ島 (Island A)
+                    </h3>
+                    <span class="text-xs bg-pink-500/20 text-pink-300 px-2.5 py-1 rounded-full font-semibold">窓側・集中エリア</span>
+                </div>
+                <div class="grid grid-cols-2 gap-4" id="island-A-grid">
+                    <!-- JSで座席を動的に生成 -->
+                </div>
+            </div>
+
+            <!-- 島B: アオバ (緑系) -->
+            <div class="island-card bg-slate-800/40 border-2 border-emerald-500/30 rounded-3xl p-6 backdrop-blur-sm shadow-xl relative overflow-hidden transition-all duration-300" data-island="B">
+                <div class="absolute -top-10 -right-10 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl"></div>
+                <div class="flex justify-between items-center mb-4 border-b border-emerald-500/20 pb-2">
+                    <h3 class="text-xl font-bold text-emerald-400 flex items-center gap-2">
+                        <span class="w-3 h-3 rounded-full bg-emerald-500 animate-pulse"></span>
+                        🌿 アオバ島 (Island B)
+                    </h3>
+                    <span class="text-xs bg-emerald-500/20 text-emerald-300 px-2.5 py-1 rounded-full font-semibold">観葉植物・リラックス</span>
+                </div>
+                <div class="grid grid-cols-2 gap-4" id="island-B-grid">
+                    <!-- JSで座席を動的に生成 -->
+                </div>
+            </div>
+
+            <!-- 島C: ミナト (青系) -->
+            <div class="island-card bg-slate-800/40 border-2 border-cyan-500/30 rounded-3xl p-6 backdrop-blur-sm shadow-xl relative overflow-hidden transition-all duration-300" data-island="C">
+                <div class="absolute -top-10 -right-10 w-32 h-32 bg-cyan-500/10 rounded-full blur-2xl"></div>
+                <div class="flex justify-between items-center mb-4 border-b border-cyan-500/20 pb-2">
+                    <h3 class="text-xl font-bold text-cyan-400 flex items-center gap-2">
+                        <span class="w-3 h-3 rounded-full bg-cyan-500 animate-pulse"></span>
+                        🐳 ミナト島 (Island C)
+                    </h3>
+                    <span class="text-xs bg-cyan-500/20 text-cyan-300 px-2.5 py-1 rounded-full font-semibold">ドリンクバー近・アクティブ</span>
+                </div>
+                <div class="grid grid-cols-2 gap-4" id="island-C-grid">
+                    <!-- JSで座席を動的に生成 -->
+                </div>
+            </div>
+
+            <!-- 島D: ヒマワリ (オレンジ/黄色系) -->
+            <div class="island-card bg-slate-800/40 border-2 border-amber-500/30 rounded-3xl p-6 backdrop-blur-sm shadow-xl relative overflow-hidden transition-all duration-300" data-island="D">
+                <div class="absolute -top-10 -right-10 w-32 h-32 bg-amber-500/10 rounded-full blur-2xl"></div>
+                <div class="flex justify-between items-center mb-4 border-b border-amber-500/20 pb-2">
+                    <h3 class="text-xl font-bold text-amber-400 flex items-center gap-2">
+                        <span class="w-3 h-3 rounded-full bg-amber-500 animate-pulse"></span>
+                        🌻 ヒマワリ島 (Island D)
+                    </h3>
+                    <span class="text-xs bg-amber-500/20 text-amber-300 px-2.5 py-1 rounded-full font-semibold">入口付近・ウェルカム</span>
+                </div>
+                <div class="grid grid-cols-2 gap-4" id="island-D-grid">
+                    <!-- JSで座席を動的に生成 -->
+                </div>
+            </div>
+        </main>
+
+        <!-- 待機プール 兼 メンバー管理 -->
+        <section class="bg-slate-800/60 border border-slate-700/50 rounded-2xl p-6 backdrop-blur-sm shadow-xl">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4 border-b border-slate-700 pb-3">
+                <div>
+                    <h3 class="text-xl font-bold text-slate-200 flex items-center gap-2">
+                        <i data-lucide="users" class="text-indigo-400"></i>
+                        フリーメンバー・待機プール
+                    </h3>
+                    <p class="text-slate-400 text-xs mt-1">
+                        座席から外れたメンバーはここへプールされます。席にドラッグするかタップして配置できます。
+                    </p>
+                </div>
+                <button id="btn-add-member" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-4 py-2 rounded-xl text-sm transition-all hover:scale-105 active:scale-95 flex items-center gap-1.5">
+                    <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                    新規メンバー追加
+                </button>
+            </div>
+            
+            <!-- プールメンバーコンテナ -->
+            <div id="member-pool" class="flex flex-wrap gap-3 min-h-[80px] p-4 bg-slate-900/60 border-2 border-dashed border-slate-700 rounded-xl items-center justify-start">
+                <!-- 動的にプールメンバーを生成。空の場合は案内文を表示 -->
+            </div>
+        </section>
+
+        <!-- 操作ガイドミニパネル -->
+        <footer class="mt-8 text-center text-xs text-slate-500 flex flex-wrap justify-center gap-6">
+            <span class="flex items-center gap-1"><i data-lucide="mouse-pointer" class="w-3.5 h-3.5"></i> ドラッグ＆ドロップで入れ替え</span>
+            <span class="flex items-center gap-1"><i data-lucide="touchpad" class="w-3.5 h-3.5"></i> 2つの席をタップして入れ替え</span>
+            <span class="flex items-center gap-1"><i data-lucide="edit-3" class="w-3.5 h-3.5"></i> 席の鉛筆マークで名前を編集</span>
+        </footer>
+
+    </div>
+
+    <!-- メンバー追加・編集モーダル -->
+    <div id="edit-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-md w-full p-6 shadow-2xl relative animate-pop">
+            <button id="modal-close" class="absolute top-4 right-4 text-slate-400 hover:text-white transition">
+                <i data-lucide="x" class="w-6 h-6"></i>
+            </button>
+            <h3 id="modal-title" class="text-xl font-bold mb-4 text-slate-200 flex items-center gap-2">
+                <i data-lucide="user-cog" class="text-pink-500"></i>
+                メンバープロフィール編集
+            </h3>
+            
+            <form id="edit-form" onsubmit="event.preventDefault();">
+                <input type="hidden" id="edit-member-id">
+                
+                <div class="space-y-4">
+                    <!-- 名前 -->
+                    <div>
+                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">名前</label>
+                        <input type="text" id="edit-name" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="例：中村 俊也">
+                    </div>
+                    
+                    <!-- 役職 / ロール -->
+                    <div>
+                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">役割・部署など</label>
+                        <input type="text" id="edit-role" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="例：開発チーム / リーダー">
+                    </div>
+
+                    <!-- 絵文字 & カラー選択 -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">アバター絵文字</label>
+                            <input type="text" id="edit-emoji" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white text-center text-xl focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="🧑‍💻">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">テーマカラー</label>
+                            <select id="edit-color" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+                                <option value="bg-pink-500/20 text-pink-300 border-pink-500/30">サクラ (ピンク)</option>
+                                <option value="bg-emerald-500/20 text-emerald-300 border-emerald-500/30">アオバ (グリーン)</option>
+                                <option value="bg-cyan-500/20 text-cyan-300 border-cyan-500/30">ミナト (ブルー)</option>
+                                <option value="bg-amber-500/20 text-amber-300 border-amber-500/30">ヒマワリ (イエロー)</option>
+                                <option value="bg-purple-500/20 text-purple-300 border-purple-500/30">パープル</option>
+                                <option value="bg-slate-700/40 text-slate-300 border-slate-600/30">ベーシック</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex gap-3 mt-6">
+                    <button type="button" id="btn-delete-member" class="bg-rose-950/50 hover:bg-rose-900 border border-rose-800 text-rose-200 px-4 py-2.5 rounded-xl text-sm font-semibold transition flex-1">
+                        削除
+                    </button>
+                    <button type="button" id="modal-cancel" class="bg-slate-700 hover:bg-slate-600 text-slate-200 px-4 py-2.5 rounded-xl text-sm font-semibold transition flex-1">
+                        キャンセル
+                    </button>
+                    <button type="submit" id="modal-submit" class="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition flex-1">
+                        保存する
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- UI通知トースター -->
+    <div id="toaster" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <script>
+        // 初期社員データ (16名)
+        const initialMembers = [
+            { id: "m1", name: "中村 俊也", role: "リーダー", emoji: "🦁", color: "bg-pink-500/20 text-pink-300 border-pink-500/30" },
+            { id: "m2", name: "永合 葵", role: "デザイナー", emoji: "🎨", color: "bg-pink-500/20 text-pink-300 border-pink-500/30" },
+            { id: "m3", name: "佐藤 健太", role: "エンジニア", emoji: "💻", color: "bg-cyan-500/20 text-cyan-300 border-cyan-500/30" },
+            { id: "m4", name: "鈴木 美咲", role: "マーケター", emoji: "📈", color: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30" },
+            { id: "m5", name: "高橋 裕二", role: "ディレクター", emoji: "📢", color: "bg-amber-500/20 text-amber-300 border-amber-500/30" },
+            { id: "m6", name: "田中 結衣", role: "プランナー", emoji: "💡", color: "bg-purple-500/20 text-purple-300 border-purple-500/30" },
+            { id: "m7", name: "渡辺 拓海", role: "エンジニア", emoji: "⚙️", color: "bg-cyan-500/20 text-cyan-300 border-cyan-500/30" },
+            { id: "m8", name: "伊藤 杏奈", role: "人事", emoji: "🤝", color: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30" },
+            { id: "m9", name: "山本 蓮", role: "サポート", emoji: "💬", color: "bg-slate-700/40 text-slate-300 border-slate-600/30" },
+            { id: "m10", name: "中村 陽菜", role: "広報", emoji: "✨", color: "bg-pink-500/20 text-pink-300 border-pink-500/30" },
+            { id: "m11", name: "小林 大輝", role: "エンジニア", emoji: "🚀", color: "bg-cyan-500/20 text-cyan-300 border-cyan-500/30" },
+            { id: "m12", name: "加藤 莉央", role: "デザイナー", emoji: "👩‍🎨", color: "bg-pink-500/20 text-pink-300 border-pink-500/30" },
+            { id: "m13", name: "吉田 陸", role: "セールス", emoji: "💼", color: "bg-amber-500/20 text-amber-300 border-amber-500/30" },
+            { id: "m14", name: "山田 咲良", role: "総務", emoji: "🌸", color: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30" },
+            { id: "m15", name: "佐々木 翔", role: "ライター", emoji: "✍️", color: "bg-purple-500/20 text-purple-300 border-purple-500/30" },
+            { id: "m16", name: "山口 葵", role: "アナリスト", emoji: "📊", color: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30" }
+        ];
+
+        // アプリの状態
+        let state = {
+            // 座席構成 (4つの島 x 4つの席 = 計16席)
+            // seatKey: 'A1', 'A2', 'A3', 'A4', 'B1', 'B2', ...
+            seats: {}, 
+            // プールにいるフリーメンバー
+            pool: [],
+            // メンバー辞書 (id -> member オブジェクト)
+            members: {},
+            // 操作履歴 (Undo用)
+            history: [],
+            // 選択中の座席 (2ステップ選択・タップ用)
+            selectedSeatKey: null,
+            // アニメーション中か
+            isAnimating: false
+        };
+
+        // Web Audio APIによるレトロ効果音エンジン
+        const soundEngine = {
+            ctx: null,
+            init() {
+                if (!this.ctx) {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+            },
+            playTick() {
+                this.init();
+                const time = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(300 + Math.random() * 400, time);
+                gain.gain.setValueAtTime(0.08, time);
+                gain.gain.exponentialRampToValueAtTime(0.01, time + 0.05);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(time);
+                osc.stop(time + 0.05);
+            },
+            playSuccess() {
+                this.init();
+                const time = this.ctx.currentTime;
+                
+                // ファンファーレの和音
+                const playNote = (freq, startOffset, duration, type='sine') => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = type;
+                    osc.frequency.setValueAtTime(freq, time + startOffset);
+                    gain.gain.setValueAtTime(0.08, time + startOffset);
+                    gain.gain.exponentialRampToValueAtTime(0.005, time + startOffset + duration);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(time + startOffset);
+                    osc.stop(time + startOffset + duration);
+                };
+
+                // ドミソ
+                playNote(523.25, 0.0, 0.15); // C5
+                playNote(659.25, 0.1, 0.15); // E5
+                playNote(783.99, 0.2, 0.15); // G5
+                playNote(1046.50, 0.35, 0.5, 'triangle'); // C6 (決定打!)
+            },
+            playSelect() {
+                this.init();
+                const time = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(440, time);
+                osc.frequency.exponentialRampToValueAtTime(880, time + 0.1);
+                gain.gain.setValueAtTime(0.05, time);
+                gain.gain.exponentialRampToValueAtTime(0.01, time + 0.15);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(time);
+                osc.stop(time + 0.15);
+            },
+            playSwap() {
+                this.init();
+                const time = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(600, time);
+                osc.frequency.exponentialRampToValueAtTime(200, time + 0.2);
+                gain.gain.setValueAtTime(0.08, time);
+                gain.gain.exponentialRampToValueAtTime(0.01, time + 0.25);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(time);
+                osc.stop(time + 0.25);
+            },
+            playDelete() {
+                this.init();
+                const time = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(220, time);
+                osc.frequency.setValueAtTime(110, time + 0.15);
+                gain.gain.setValueAtTime(0.06, time);
+                gain.gain.exponentialRampToValueAtTime(0.01, time + 0.3);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(time);
+                osc.stop(time + 0.3);
+            }
+        };
+
+        // トースター（通知）表示機能
+        const toast = (message, type = 'success') => {
+            const toaster = document.getElementById('toaster');
+            const toastEl = document.createElement('div');
+            toastEl.className = `p-4 rounded-xl shadow-2xl flex items-center gap-3 text-sm font-semibold transition-all duration-300 translate-x-12 opacity-0 select-none ${
+                type === 'success' ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-300 border border-slate-700'
+            }`;
+            
+            const icon = type === 'success' ? 'sparkles' : 'info';
+            toastEl.innerHTML = `<i data-lucide="${icon}" class="w-5 h-5 flex-shrink-0 text-amber-300"></i> <span>${message}</span>`;
+            toaster.appendChild(toastEl);
+            lucide.createIcons();
+
+            // トリガーアニメーション
+            requestAnimationFrame(() => {
+                toastEl.classList.remove('translate-x-12', 'opacity-0');
+            });
+
+            setTimeout(() => {
+                toastEl.classList.add('translate-x-12', 'opacity-0');
+                setTimeout(() => toastEl.remove(), 300);
+            }, 3000);
+        };
+
+        // 状態保存 (履歴に追加)
+        const saveToHistory = () => {
+            const snapshot = {
+                seats: JSON.parse(JSON.stringify(state.seats)),
+                pool: JSON.parse(JSON.stringify(state.pool)),
+                members: JSON.parse(JSON.stringify(state.members))
+            };
+            state.history.push(snapshot);
+            if (state.history.length > 20) state.history.shift(); // 履歴上限
+            updateUndoButtonState();
+        };
+
+        const updateUndoButtonState = () => {
+            const btnUndo = document.getElementById('btn-undo');
+            if (state.history.length > 0) {
+                btnUndo.removeAttribute('disabled');
+                btnUndo.classList.remove('opacity-50', 'cursor-not-allowed');
+            } else {
+                btnUndo.setAttribute('disabled', 'true');
+                btnUndo.classList.add('opacity-50', 'cursor-not-allowed');
+            }
+        };
+
+        // 履歴から復元 (Undo)
+        const undo = () => {
+            if (state.history.length === 0) return;
+            const snapshot = state.history.pop();
+            state.seats = snapshot.seats;
+            state.pool = snapshot.pool;
+            state.members = snapshot.members;
+            
+            soundEngine.playSwap();
+            updateUndoButtonState();
+            renderAll();
+            toast("一手戻しました", "info");
+        };
+
+        // デフォルトメンバーへのリセット
+        const initDefaultData = () => {
+            saveToHistory();
+            state.members = {};
+            initialMembers.forEach(m => {
+                state.members[m.id] = { ...m };
+            });
+
+            // 16席に1対1で割り当て
+            state.seats = {};
+            const islandKeys = ['A', 'B', 'C', 'D'];
+            let memberIdx = 0;
+            islandKeys.forEach(island => {
+                for (let num = 1; num <= 4; num++) {
+                    const seatKey = `${island}${num}`;
+                    if (memberIdx < initialMembers.length) {
+                        state.seats[seatKey] = initialMembers[memberIdx].id;
+                        memberIdx++;
+                    } else {
+                        state.seats[seatKey] = null;
+                    }
+                }
+            });
+
+            state.pool = [];
+            state.selectedSeatKey = null;
+            renderAll();
+        };
+
+        // 全ての席を空にする
+        const resetSeatsToPool = () => {
+            saveToHistory();
+            // すべての配置済みメンバーをプールに移す
+            const currentPoolSet = new Set(state.pool);
+            Object.keys(state.seats).forEach(seatKey => {
+                const memberId = state.seats[seatKey];
+                if (memberId) {
+                    currentPoolSet.add(memberId);
+                }
+                state.seats[seatKey] = null;
+            });
+            state.pool = Array.from(currentPoolSet);
+            state.selectedSeatKey = null;
+            
+            soundEngine.playDelete();
+            renderAll();
+            toast("座席をクリアしました。プールから自由に配置できます！", "info");
+        };
+
+        // ランダムシャッフル
+        const shuffleAll = () => {
+            if (state.isAnimating) return;
+            saveToHistory();
+            state.isAnimating = true;
+            state.selectedSeatKey = null;
+            
+            // 席にいる人とプールにいる人を一挙回収してシャッフル
+            const allActiveMemberIds = [];
+            Object.values(state.seats).forEach(id => { if (id) allActiveMemberIds.push(id); });
+            state.pool.forEach(id => { if (id) allActiveMemberIds.push(id); });
+            
+            // フィッシャー–イェーツのシャッフル
+            const shuffleArray = (array) => {
+                for (let i = array.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [array[i], array[j]] = [array[j], array[i]];
+                }
+                return array;
+            };
+
+            const shuffledPool = shuffleArray([...allActiveMemberIds]);
+            
+            // 演出開始: 席カードをスロット風にアニメーションさせる
+            const seatElements = document.querySelectorAll('.seat-container');
+            seatElements.forEach(el => {
+                el.classList.add('animate-shake');
+                const content = el.querySelector('.seat-content-wrapper');
+                if (content) content.classList.add('animate-slot');
+            });
+
+            // 15回ほどランダムな途中経過を見せる
+            let count = 0;
+            const maxCounts = 15;
+            const interval = setInterval(() => {
+                soundEngine.playTick();
+                
+                // 途中経過を仮ランダム表示
+                const tempShuffled = shuffleArray([...allActiveMemberIds]);
+                let tempIdx = 0;
+                Object.keys(state.seats).forEach(seatKey => {
+                    const seatEl = document.querySelector(`[data-seat="${seatKey}"] .member-name`);
+                    const seatEmojiEl = document.querySelector(`[data-seat="${seatKey}"] .member-emoji`);
+                    if (tempIdx < tempShuffled.length) {
+                        const m = state.members[tempShuffled[tempIdx]];
+                        if (seatEl) seatEl.textContent = m.name;
+                        if (seatEmojiEl) seatEmojiEl.textContent = m.emoji;
+                        tempIdx++;
+                    } else {
+                        if (seatEl) seatEl.textContent = "（空席）";
+                        if (seatEmojiEl) seatEmojiEl.textContent = "👥";
+                    }
+                });
+                count++;
+                if (count >= maxCounts) {
+                    clearInterval(interval);
+                    
+                    // 最終確定割り当て
+                    state.seats = {};
+                    const islandKeys = ['A', 'B', 'C', 'D'];
+                    let finalIdx = 0;
+                    
+                    islandKeys.forEach(island => {
+                        for (let num = 1; num <= 4; num++) {
+                            const seatKey = `${island}${num}`;
+                            if (finalIdx < shuffledPool.length) {
+                                state.seats[seatKey] = shuffledPool[finalIdx];
+                                finalIdx++;
+                            } else {
+                                state.seats[seatKey] = null;
+                            }
+                        }
+                    });
+
+                    // 残ったメンバーは待機プールへ
+                    state.pool = shuffledPool.slice(finalIdx);
+
+                    // 演出終了
+                    setTimeout(() => {
+                        renderAll();
+                        state.isAnimating = false;
+                        
+                        // クラッカーエフェクト!
+                        confetti({
+                            particleCount: 100,
+                            spread: 70,
+                            origin: { y: 0.6 },
+                            colors: ['#ff007f', '#00ffcc', '#ffcc00', '#7f00ff']
+                        });
+                        
+                        soundEngine.playSuccess();
+                        toast("全員シャッフル完了！🎉");
+                    }, 100);
+                }
+            }, 80);
+        };
+
+        // 島内シャッフル (島ごとのメンバーは固定して位置だけ入れ替え)
+        const shuffleIslands = () => {
+            if (state.isAnimating) return;
+            saveToHistory();
+            state.isAnimating = true;
+            state.selectedSeatKey = null;
+
+            const islandKeys = ['A', 'B', 'C', 'D'];
+            
+            // 演出
+            const seatElements = document.querySelectorAll('.seat-container');
+            seatElements.forEach(el => {
+                el.classList.add('animate-shake');
+                const content = el.querySelector('.seat-content-wrapper');
+                if (content) content.classList.add('animate-slot');
+            });
+
+            let count = 0;
+            const maxCounts = 10;
+            const interval = setInterval(() => {
+                soundEngine.playTick();
+                count++;
+                if (count >= maxCounts) {
+                    clearInterval(interval);
+
+                    islandKeys.forEach(island => {
+                        // 島の4つのシートメンバーを抽出
+                        const seatKeys = [`${island}1`, `${island}2`, `${island}3`, `${island}4` ];
+                        const islandMembers = seatKeys.map(k => state.seats[k]).filter(id => id !== null);
+                        
+                        // 島メンバー内シャッフル
+                        for (let i = islandMembers.length - 1; i > 0; i--) {
+                            const j = Math.floor(Math.random() * (i + 1));
+                            [islandMembers[i], islandMembers[j]] = [islandMembers[j], islandMembers[i]];
+                        }
+
+                        // 再割り当て
+                        seatKeys.forEach((key, index) => {
+                            if (index < islandMembers.length) {
+                                state.seats[key] = islandMembers[index];
+                            } else {
+                                state.seats[key] = null;
+                            }
+                        });
+                    });
+
+                    renderAll();
+                    state.isAnimating = false;
+                    soundEngine.playSuccess();
+                    toast("島内配置をシャッフルしました！");
+                }
+            }, 100);
+        };
+
+        // 個別席入れ替え/アサイン
+        const swapSeats = (keyA, keyB) => {
+            saveToHistory();
+            const temp = state.seats[keyA];
+            state.seats[keyA] = state.seats[keyB];
+            state.seats[keyB] = temp;
+            
+            soundEngine.playSwap();
+            renderAll();
+            toast("席を入れ替えました！");
+        };
+
+        // 待機メンバーを特定の席へアサイン
+        const assignFromPool = (memberId, targetSeatKey) => {
+            saveToHistory();
+            const oldSeatMember = state.seats[targetSeatKey]; // 入れ替わりで待機に移動するメンバー
+
+            // プールから当該メンバーを取り除く
+            state.pool = state.pool.filter(id => id !== memberId);
+            
+            // 席にいたメンバーをプールへ
+            if (oldSeatMember) {
+                state.pool.push(oldSeatMember);
+            }
+            
+            // 新規アサイン
+            state.seats[targetSeatKey] = memberId;
+
+            soundEngine.playSwap();
+            renderAll();
+            toast(`${state.members[memberId].name} さんを着席させました`);
+        };
+
+        // 席からプールへ退避
+        const kickToPool = (seatKey) => {
+            const memberId = state.seats[seatKey];
+            if (!memberId) return;
+            
+            saveToHistory();
+            state.seats[seatKey] = null;
+            state.pool.push(memberId);
+            
+            soundEngine.playDelete();
+            renderAll();
+            toast(`${state.members[memberId].name} さんをフリープールに移動しました`, "info");
+        };
+
+        // ----------------------------------------------------
+        // HTML描画ロジック
+        // ----------------------------------------------------
+        
+        // 座席カードのHTMLを構築
+        const createSeatHTML = (seatKey, memberId) => {
+            const member = memberId ? state.members[memberId] : null;
+            const isSelected = state.selectedSeatKey === seatKey;
+            
+            if (member) {
+                // 着席時のカラフルなカード
+                return `
+                    <div class="seat-container group relative bg-slate-800 hover:bg-slate-750 border-2 ${isSelected ? 'border-pink-500 ring-4 ring-pink-500/30' : 'border-slate-700 hover:border-slate-500'} rounded-2xl p-4 shadow-md transition-all duration-300 hover:-translate-y-1 cursor-grab active:cursor-grabbing select-none"
+                         draggable="true" 
+                         data-seat="${seatKey}"
+                         data-member-id="${memberId}"
+                         onclick="handleSeatClick('${seatKey}')"
+                         ondragstart="handleDragStart(event)"
+                         ondragover="handleDragOver(event)"
+                         ondrop="handleDrop(event)"
+                         ondragend="handleDragEnd(event)">
+                        
+                        <!-- 席名 & 退席ボタン -->
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-[10px] font-bold text-slate-500 tracking-wider">SEAT ${seatKey}</span>
+                            <div class="flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                                <button onclick="event.stopPropagation(); openEditModal('${memberId}')" class="p-1 hover:bg-slate-700 rounded text-slate-400 hover:text-white transition" title="編集">
+                                    <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+                                </button>
+                                <button onclick="event.stopPropagation(); kickToPool('${seatKey}')" class="p-1 hover:bg-rose-950/50 rounded text-rose-400 hover:text-rose-300 transition" title="席を空ける">
+                                    <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- メンバー情報 -->
+                        <div class="seat-content-wrapper flex items-center gap-3">
+                            <div class="w-12 h-12 rounded-xl ${member.color || 'bg-slate-700'} flex items-center justify-center text-2xl shadow-inner flex-shrink-0">
+                                <span class="member-emoji">${member.emoji || '👤'}</span>
+                            </div>
+                            <div class="overflow-hidden">
+                                <h4 class="member-name font-bold text-white text-base truncate" title="${member.name}">${member.name}</h4>
+                                <p class="text-slate-400 text-xs truncate mt-0.5">${member.role || 'メンバー'}</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                // 空席表示
+                return `
+                    <div class="seat-container group bg-slate-900/40 hover:bg-slate-800/40 border-2 border-dashed ${isSelected ? 'border-pink-500 ring-4 ring-pink-500/30 bg-slate-800/50' : 'border-slate-800 hover:border-slate-700'} rounded-2xl p-4 flex flex-col items-center justify-center min-h-[100px] transition-all duration-300 cursor-pointer text-slate-500 hover:text-slate-300"
+                         data-seat="${seatKey}"
+                         onclick="handleSeatClick('${seatKey}')"
+                         ondragover="handleDragOver(event)"
+                         ondrop="handleDrop(event)">
+                        <span class="text-[9px] font-bold text-slate-700 mb-1.5 self-start">SEAT ${seatKey}</span>
+                        <i data-lucide="user-plus" class="w-5 h-5 mb-1 group-hover:scale-110 transition-transform"></i>
+                        <span class="text-xs font-semibold">空席</span>
+                    </div>
+                `;
+            }
+        };
+
+        // フリープール(ベンチ)メンバーのHTML
+        const createPoolMemberHTML = (memberId) => {
+            const member = state.members[memberId];
+            if (!member) return '';
+            return `
+                <div class="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl px-4 py-2 cursor-grab active:cursor-grabbing shadow-md hover:shadow-lg transition group"
+                     draggable="true"
+                     data-member-id="${memberId}"
+                     data-pool="true"
+                     onclick="handlePoolMemberClick('${memberId}')"
+                     ondragstart="handleDragStart(event)">
+                    <span class="text-xl">${member.emoji || '👤'}</span>
+                    <div class="text-left">
+                        <p class="font-bold text-sm text-slate-200">${member.name}</p>
+                        <p class="text-[10px] text-slate-400 leading-none mt-0.5">${member.role || 'フリー'}</p>
+                    </div>
+                    <button onclick="event.stopPropagation(); openEditModal('${memberId}')" class="ml-2 p-1 opacity-0 group-hover:opacity-100 hover:bg-slate-600 rounded text-slate-400 hover:text-white transition">
+                        <i data-lucide="edit-3" class="w-3 h-3"></i>
+                    </button>
+                </div>
+            `;
+        };
+
+        // 全エリアの再描画
+        const renderAll = () => {
+            const islandKeys = ['A', 'B', 'C', 'D'];
+            
+            islandKeys.forEach(island => {
+                const grid = document.getElementById(`island-${island}-grid`);
+                grid.innerHTML = '';
+                for (let num = 1; num <= 4; num++) {
+                    const seatKey = `${island}${num}`;
+                    grid.innerHTML += createSeatHTML(seatKey, state.seats[seatKey]);
+                }
+            });
+
+            // 待機プール描画
+            const poolContainer = document.getElementById('member-pool');
+            if (state.pool.length === 0) {
+                poolContainer.innerHTML = `
+                    <div class="text-center w-full py-4 text-slate-500 text-sm flex flex-col items-center justify-center gap-1">
+                        <i data-lucide="info" class="w-5 h-5 text-slate-600"></i>
+                        現在待機中のメンバーはいません（全員着席中）
+                    </div>
+                `;
+            } else {
+                poolContainer.innerHTML = state.pool.map(memberId => createPoolMemberHTML(memberId)).join('');
+            }
+
+            // Lucideアイコンリフレッシュ
+            lucide.createIcons();
+        };
+
+        // ----------------------------------------------------
+        // イベントハンドラー：ドラッグ＆ドロップ（PC用）
+        // ----------------------------------------------------
+        let draggedData = null; // { type: 'seat'|'pool', key/memberId }
+
+        const handleDragStart = (e) => {
+            const target = e.currentTarget;
+            const isFromPool = target.dataset.pool === 'true';
+            
+            if (isFromPool) {
+                draggedData = { type: 'pool', memberId: target.dataset.memberId };
+            } else {
+                draggedData = { type: 'seat', seatKey: target.dataset.seat };
+            }
+            target.classList.add('opacity-40');
+            e.dataTransfer.effectAllowed = 'move';
+        };
+
+        const handleDragOver = (e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+        };
+
+        const handleDrop = (e) => {
+            e.preventDefault();
+            const targetSeatEl = e.currentTarget.closest('[data-seat]');
+            if (!targetSeatEl || !draggedData) return;
+
+            const targetSeatKey = targetSeatEl.dataset.seat;
+
+            if (draggedData.type === 'pool') {
+                // プールから座席へ
+                assignFromPool(draggedData.memberId, targetSeatKey);
+            } else if (draggedData.type === 'seat') {
+                // 席から別の席へ
+                const sourceSeatKey = draggedData.seatKey;
+                if (sourceSeatKey !== targetSeatKey) {
+                    swapSeats(sourceSeatKey, targetSeatKey);
+                }
+            }
+            draggedData = null;
+        };
+
+        const handleDragEnd = (e) => {
+            e.currentTarget.classList.remove('opacity-40');
+            draggedData = null;
+        };
+
+        // 待機プール自体へのドロップ（席からプールへ）
+        const setupPoolDropZone = () => {
+            const pool = document.getElementById('member-pool');
+            pool.addEventListener('dragover', (e) => {
+                e.preventDefault();
+            });
+            pool.addEventListener('drop', (e) => {
+                e.preventDefault();
+                if (draggedData && draggedData.type === 'seat') {
+                    kickToPool(draggedData.seatKey);
+                }
+                draggedData = null;
+            });
+        };
+
+        // ----------------------------------------------------
+        // イベントハンドラー：タップ/クリック交互選択（スマホ＆クリック用）
+        // ----------------------------------------------------
+        const handleSeatClick = (seatKey) => {
+            if (state.isAnimating) return;
+            soundEngine.playSelect();
+
+            if (!state.selectedSeatKey) {
+                // 1つ目の選択
+                state.selectedSeatKey = seatKey;
+                renderAll();
+                toast(`席 ${seatKey} を選択しました。次に入れ替える席、またはプールメンバーを選択してください。`, "info");
+            } else {
+                // 2つ目の選択 → 入れ替え
+                const keyA = state.selectedSeatKey;
+                const keyB = seatKey;
+                
+                if (keyA === keyB) {
+                    // 同じ席を再度クリックした場合は選択解除
+                    state.selectedSeatKey = null;
+                    renderAll();
+                    return;
+                }
+
+                swapSeats(keyA, keyB);
+                state.selectedSeatKey = null;
+            }
+        };
+
+        // 待機プールのメンバーをクリック
+        const handlePoolMemberClick = (memberId) => {
+            if (state.isAnimating) return;
+            soundEngine.playSelect();
+
+            if (state.selectedSeatKey) {
+                // 既に席が選択されている状態でプールメンバーをクリック → その席に配置
+                const targetSeatKey = state.selectedSeatKey;
+                assignFromPool(memberId, targetSeatKey);
+                state.selectedSeatKey = null;
+            } else {
+                // 席が選ばれていない場合、案内トースト
+                toast(`着席させたい席（空席でも可）を先にタップしてください`, "info");
+            }
+        };
+
+        // ----------------------------------------------------
+        // メンバー追加・編集モーダル処理
+        // ----------------------------------------------------
+        const openEditModal = (memberId = null) => {
+            const modal = document.getElementById('edit-modal');
+            const form = document.getElementById('edit-form');
+            const deleteBtn = document.getElementById('btn-delete-member');
+            
+            document.getElementById('edit-member-id').value = memberId || '';
+            
+            if (memberId) {
+                // 既存の編集
+                const member = state.members[memberId];
+                document.getElementById('modal-title').innerHTML = `<i data-lucide="user-cog" class="text-pink-400"></i> プロフィールを編集`;
+                document.getElementById('edit-name').value = member.name;
+                document.getElementById('edit-role').value = member.role || '';
+                document.getElementById('edit-emoji').value = member.emoji || '🧑‍💻';
+                document.getElementById('edit-color').value = member.color || 'bg-slate-700/40 text-slate-300 border-slate-600/30';
+                deleteBtn.classList.remove('hidden');
+            } else {
+                // 新規作成
+                document.getElementById('modal-title').innerHTML = `<i data-lucide="user-plus" class="text-indigo-400"></i> 新メンバー追加`;
+                document.getElementById('edit-name').value = '';
+                document.getElementById('edit-role').value = '';
+                document.getElementById('edit-emoji').value = '🧑‍💻';
+                document.getElementById('edit-color').value = 'bg-slate-700/40 text-slate-300 border-slate-600/30';
+                deleteBtn.classList.add('hidden');
+            }
+            
+            modal.classList.remove('hidden');
+            lucide.createIcons();
+        };
+
+        const closeEditModal = () => {
+            document.getElementById('edit-modal').classList.add('hidden');
+        };
+
+        // フォーム保存
+        const saveMember = () => {
+            saveToHistory();
+            const id = document.getElementById('edit-member-id').value;
+            const name = document.getElementById('edit-name').value.trim() || '無名メンバー';
+            const role = document.getElementById('edit-role').value.trim() || 'メンバー';
+            const emoji = document.getElementById('edit-emoji').value.trim() || '🧑‍💻';
+            const color = document.getElementById('edit-color').value;
+
+            if (id) {
+                // 更新
+                state.members[id] = { ...state.members[id], name, role, emoji, color };
+                toast("メンバーを更新しました！");
+            } else {
+                // 新規追加
+                const newId = 'm' + Date.now();
+                state.members[newId] = { id: newId, name, role, emoji, color };
+                state.pool.push(newId);
+                toast("新しいメンバーを追加しました！プールから座席に配置してください。");
+            }
+            
+            soundEngine.playSuccess();
+            closeEditModal();
+            renderAll();
+        };
+
+        // メンバー完全削除
+        const deleteMember = () => {
+            const id = document.getElementById('edit-member-id').value;
+            if (!id) return;
+
+            saveToHistory();
+
+            // 1. 席から削除
+            Object.keys(state.seats).forEach(seatKey => {
+                if (state.seats[seatKey] === id) {
+                    state.seats[seatKey] = null;
+                }
+            });
+
+            // 2. プールから削除
+            state.pool = state.pool.filter(pId => pId !== id);
+
+            // 3. 辞書から削除
+            delete state.members[id];
+
+            soundEngine.playDelete();
+            closeEditModal();
+            renderAll();
+            toast("メンバーを削除しました");
+        };
+
+        // ----------------------------------------------------
+        // 初期設定・リスナーバインド
+        // ----------------------------------------------------
+        const setupEventListeners = () => {
+            // アクションボタン
+            document.getElementById('btn-shuffle-all').addEventListener('click', shuffleAll);
+            document.getElementById('btn-shuffle-islands').addEventListener('click', shuffleIslands);
+            document.getElementById('btn-undo').addEventListener('click', undo);
+            document.getElementById('btn-reset-seats').addEventListener('click', resetSeatsToPool);
+            document.getElementById('btn-restore-default').addEventListener('click', initDefaultData);
+            document.getElementById('btn-add-member').addEventListener('click', () => openEditModal(null));
+
+            // モーダル
+            document.getElementById('modal-close').addEventListener('click', closeEditModal);
+            document.getElementById('modal-cancel').addEventListener('click', closeEditModal);
+            document.getElementById('btn-delete-member').addEventListener('click', deleteMember);
+            document.getElementById('edit-form').addEventListener('submit', saveMember);
+
+            // 待機プールをドロップゾーンとして定義
+            setupPoolDropZone();
+
+            // Web Audioの再生制限を解除するためにクリックイベントでオーディオ文脈を走らせる
+            document.body.addEventListener('click', () => {
+                soundEngine.init();
+            }, { once: true });
+        };
+
+        // 初期化実行
+        window.onload = () => {
+            initDefaultData();
+            setupEventListeners();
+        };
+    </script>
+</body>
+</html>

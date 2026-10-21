@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="ja" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Café de L'Aube | 心地よい光が差し込む、街角のサードウェーブカフェ</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Noto Serif JP for Elegant Japanese & Montserrat for Modern English -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,600;1,400&family=Noto+Serif+JP:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        cafe: {
+                            50: '#FAF8F5',
+                            100: '#F3EFE9',
+                            200: '#E5DEC9',
+                            300: '#D5C3A6',
+                            400: '#B89774',
+                            500: '#997351',
+                            600: '#7C583B',
+                            700: '#5F412B',
+                            800: '#432C1E',
+                            900: '#2A1A12',
+                        },
+                        leaf: {
+                            light: '#8E9A86',
+                            dark: '#545F4C'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Montserrat', 'Noto Serif JP', 'sans-serif'],
+                        serif: ['Noto Serif JP', 'serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* カスタム微調整 */
+        body {
+            font-family: 'Montserrat', 'Noto Serif JP', sans-serif;
+            background-color: #FAF8F5;
+            color: #2A1A12;
+        }
+        .hero-bg {
+            background-image: linear-gradient(rgba(42, 26, 18, 0.4), rgba(42, 26, 18, 0.6)), 
+                              url('https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&q=80&w=1600');
+            background-size: cover;
+            background-position: center;
+        }
+        /* 画像が読み込めなかった場合のフォールバック */
+        .image-fallback {
+            background-color: #E5DEC9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body class="antialiased selection:bg-cafe-300 selection:text-cafe-900">
+
+    <!-- ヘッダー / ナビゲーション -->
+    <header id="main-header" class="fixed w-full top-0 left-0 z-40 transition-all duration-300 bg-transparent py-5">
+        <div class="max-w-7xl mx-auto px-6 flex justify-between items-center">
+            <!-- ロゴ -->
+            <a href="#" class="flex flex-col items-start group">
+                <span class="font-serif text-xl md:text-2xl font-bold tracking-widest text-white group-hover:text-cafe-300 transition-colors duration-300" id="header-logo-text">
+                    Café de L'Aube
+                </span>
+                <span class="text-[9px] tracking-[0.25em] text-cafe-100 uppercase mt-0.5" id="header-sub-text">Organic & Specialty Coffee</span>
+            </a>
+
+            <!-- デスクトップ ナビゲーション -->
+            <nav class="hidden md:flex items-center space-x-8 text-sm tracking-wider font-medium text-white" id="desktop-nav">
+                <a href="#about" class="hover:text-cafe-300 transition-colors duration-300 py-2">About</a>
+                <a href="#menu" class="hover:text-cafe-300 transition-colors duration-300 py-2">Menu</a>
+                <a href="#gallery" class="hover:text-cafe-300 transition-colors duration-300 py-2">Gallery</a>
+                <a href="#access" class="hover:text-cafe-300 transition-colors duration-300 py-2">Access</a>
+                <a href="#reservation" class="bg-cafe-500 hover:bg-cafe-600 text-white px-5 py-2.5 rounded-full transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
+                    Reservation
+                </a>
+            </nav>
+
+            <!-- モバイルメニューボタン -->
+            <button id="menu-toggle-btn" class="md:hidden text-white hover:text-cafe-300 focus:outline-none z-50 transition-colors" aria-label="メニューを開閉">
+                <svg id="hamburger-icon" class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                </svg>
+                <svg id="close-icon" class="w-7 h-7 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+    </header>
+
+    <!-- モバイル ドロワー メニュー -->
+    <div id="mobile-menu" class="fixed inset-0 bg-cafe-900 bg-opacity-98 z-30 flex flex-col justify-center items-center space-y-8 text-xl tracking-widest text-white transition-all duration-500 transform translate-x-full">
+        <a href="#about" class="hover:text-cafe-300 transition-all font-serif py-2">About</a>
+        <a href="#menu" class="hover:text-cafe-300 transition-all font-serif py-2">Menu</a>
+        <a href="#gallery" class="hover:text-cafe-300 transition-all font-serif py-2">Gallery</a>
+        <a href="#access" class="hover:text-cafe-300 transition-all font-serif py-2">Access</a>
+        <a href="#reservation" class="bg-cafe-500 hover:bg-cafe-600 text-white px-8 py-3.5 rounded-full transition-all font-serif shadow-lg">
+            Reservation
+        </a>
+    </div>
+
+    <!-- ヒーローセクション -->
+    <section class="hero-bg h-screen flex items-center justify-center relative overflow-hidden">
+        <div class="text-center px-6 max-w-4xl z-10 text-white flex flex-col items-center">
+            <span class="text-xs md:text-sm tracking-[0.4em] text-cafe-300 uppercase font-semibold mb-4 animate-fade-in">
+                夜明けの光とともに、至福の一杯を
+            </span>
+            <h1 class="font-serif text-4xl md:text-7xl font-bold tracking-wider leading-snug md:leading-tight mb-6 animate-fade-in-delayed">
+                心ほどける、<br class="md:hidden">穏やかな時間
+            </h1>
+            <p class="text-sm md:text-lg text-cafe-100 font-light max-w-xl leading-relaxed mb-10 tracking-wide font-serif">
+                Café de L'Aube は、厳選されたオーガニック豆と、地元の新鮮な食材で作るブレックファストをお届けします。朝の柔らかな光の中で、心地よい一日をスタートさせませんか。
+            </p>
+            <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-6">
+                <a href="#reservation" class="bg-cafe-400 hover:bg-cafe-500 text-white font-medium px-8 py-4 rounded-full transition-all duration-300 shadow-xl transform hover:-translate-y-0.5 tracking-wider text-sm min-w-[160px]">
+                    席を予約する
+                </a>
+                <a href="#menu" class="border border-white border-opacity-60 hover:border-opacity-100 hover:bg-white hover:text-cafe-900 text-white font-medium px-8 py-4 rounded-full transition-all duration-300 tracking-wider text-sm min-w-[160px]">
+                    メニューを見る
+                </a>
+            </div>
+        </div>
+
+        <!-- 下スクロールを促すインジケーター -->
+        <div class="absolute bottom-10 left-1/2 transform -translate-x-1/2 flex flex-col items-center space-y-2 opacity-85">
+            <span class="text-[10px] tracking-[0.3em] text-white uppercase font-light">Scroll Down</span>
+            <div class="w-6 h-10 border border-white border-opacity-40 rounded-full p-1 flex justify-center">
+                <div class="w-1.5 h-2.5 bg-cafe-300 rounded-full animate-bounce"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- コンセプト (About) -->
+    <section id="about" class="py-24 md:py-32 bg-cafe-100 relative overflow-hidden">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20 items-center">
+                
+                <!-- テキストエリア (6/12) -->
+                <div class="lg:col-span-6 space-y-8 z-10">
+                    <div class="space-y-3">
+                        <span class="text-xs uppercase tracking-[0.3em] font-semibold text-cafe-500">Our Concept</span>
+                        <h2 class="font-serif text-3xl md:text-4xl font-bold tracking-wider leading-snug">
+                            「L'Aube（ローブ）」に込めた、<br>新しい朝の始まり
+                        </h2>
+                    </div>
+                    <div class="w-16 h-1 bg-cafe-400"></div>
+                    <p class="text-cafe-800 leading-relaxed font-light text-sm md:text-base space-y-4">
+                        フランス語で「夜明け」を意味するL'Aube。
+                        私たちは、眠りから覚めた街に一番に明かりを灯し、淹れたてのコーヒーの香りで一日を包み込みます。
+                    </p>
+                    <p class="text-cafe-800 leading-relaxed font-light text-sm md:text-base">
+                        世界各国の小規模農家から直接仕入れたスペシャリティコーヒー豆は、それぞれの個性を最大限に引き出すよう、毎日店内で焙煎しています。<br>
+                        木漏れ日が揺れる静かな店内で、丁寧なドリップのプロセスを眺めながら、あなただけの特別なひとときをお過ごしください。
+                    </p>
+                    <div class="grid grid-cols-3 gap-4 pt-4 text-center">
+                        <div class="bg-white p-4 rounded-xl shadow-sm">
+                            <span class="block font-serif text-xl md:text-2xl font-bold text-cafe-600">100%</span>
+                            <span class="text-[11px] text-cafe-500 tracking-wider">Specialty Beans</span>
+                        </div>
+                        <div class="bg-white p-4 rounded-xl shadow-sm">
+                            <span class="block font-serif text-xl md:text-2xl font-bold text-cafe-600">Daily</span>
+                            <span class="text-[11px] text-cafe-500 tracking-wider">In-house Roast</span>
+                        </div>
+                        <div class="bg-white p-4 rounded-xl shadow-sm">
+                            <span class="block font-serif text-xl md:text-2xl font-bold text-cafe-600">Organic</span>
+                            <span class="text-[11px] text-cafe-500 tracking-wider">Fresh Ingredients</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ビジュアルエリア (6/12) -->
+                <div class="lg:col-span-6 grid grid-cols-12 gap-4 relative">
+                    <!-- 装飾サークル -->
+                    <div class="absolute -top-10 -left-10 w-40 h-40 bg-cafe-200 rounded-full filter blur-xl opacity-50 z-0"></div>
+                    
+                    <!-- メイン画像 -->
+                    <div class="col-span-8 rounded-2xl overflow-hidden shadow-2xl z-10 transform hover:scale-[1.02] transition-transform duration-500">
+                        <img src="https://images.unsplash.com/photo-1498804103079-a6351b050096?auto=format&fit=crop&q=80&w=800" 
+                             alt="焙煎されたばかりのコーヒー豆を淹れる様子" 
+                             class="w-full h-[320px] md:h-[400px] object-cover"
+                             onerror="this.parentElement.className+=' image-fallback'; this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%25%22 height=%22100%25%22 viewBox=%220 0 100 100%22><rect width=%22100%25%22 height=%22100%25%22 fill=%22%23E5DEC9%22/><text x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 font-family=%22serif%22 fill=%22%237C583B%22>Café</text></svg>';">
+                    </div>
+                    <!-- サブ画像 -->
+                    <div class="col-span-4 flex flex-col justify-end space-y-4 z-10">
+                        <div class="rounded-2xl overflow-hidden shadow-xl transform hover:scale-[1.03] transition-transform duration-500">
+                            <img src="https://images.unsplash.com/photo-1445116572660-236099ec97a0?auto=format&fit=crop&q=80&w=400" 
+                                 alt="カフェのテーブルセッティング" 
+                                 class="w-full h-[150px] md:h-[180px] object-cover"
+                                 onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%25%22 height=%22100%25%22 viewBox=%220 0 100 100%22><rect width=%22100%25%22 height=%22100%25%22 fill=%22%23D5C3A6%22/></svg>';">
+                        </div>
+                        <div class="rounded-2xl overflow-hidden shadow-xl transform hover:scale-[1.03] transition-transform duration-500">
+                            <img src="https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&q=80&w=400" 
+                                 alt="居心地の良いカフェ店内" 
+                                 class="w-full h-[150px] md:h-[180px] object-cover"
+                                 onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%25%22 height=%22100%25%22 viewBox=%220 0 100 100%22><rect width=%22100%25%22 height=%22100%25%22 fill=%22%23B89774%22/></svg>';">
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- メニューセクション (Interactive Menu) -->
+    <section id="menu" class="py-24 md:py-32 bg-white">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center max-w-2xl mx-auto mb-16 space-y-4">
+                <span class="text-xs uppercase tracking-[0.3em] font-semibold text-cafe-500">Our Offerings</span>
+                <h2 class="font-serif text-3xl md:text-4xl font-bold tracking-wider">心満たすメニュー</h2>
+                <div class="w-12 h-0.5 bg-cafe-400 mx-auto"></div>
+                <p class="text-cafe-600 font-light text-sm md:text-base">
+                    素材本来の味わいを引き立てるよう、丁寧に調理しています。オーガニック、ヴィーガンオプションもご用意しております。
+                </p>
+            </div>
+
+            <!-- メニューカテゴリ タブ -->
+            <div class="flex justify-center space-x-2 md:space-x-4 mb-12 p-1.5 bg-cafe-50 rounded-full max-w-md mx-auto shadow-inner border border-cafe-100">
+                <button onclick="switchTab('all')" id="tab-all" class="menu-tab px-6 py-2.5 rounded-full text-xs md:text-sm font-medium tracking-wide transition-all duration-300 bg-cafe-600 text-white shadow-md">
+                    All
+                </button>
+                <button onclick="switchTab('drinks')" id="tab-drinks" class="menu-tab px-6 py-2.5 rounded-full text-xs md:text-sm font-medium tracking-wide transition-all duration-300 text-cafe-700 hover:bg-cafe-100">
+                    Drinks
+                </button>
+                <button onclick="switchTab('food')" id="tab-food" class="menu-tab px-6 py-2.5 rounded-full text-xs md:text-sm font-medium tracking-wide transition-all duration-300 text-cafe-700 hover:bg-cafe-100">
+                    Foods
+                </button>
+                <button onclick="switchTab('dessert')" id="tab-dessert" class="menu-tab px-6 py-2.5 rounded-full text-xs md:text-sm font-medium tracking-wide transition-all duration-300 text-cafe-700 hover:bg-cafe-100">
+                    Desserts
+                </button>
+            </div>
+
+            <!-- メニューアイテムグリッド -->
+            <div id="menu-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                
+                <!-- ドリンク 1 -->
+                <div class="menu-item bg-cafe-50 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1" data-category="drinks">
+                    <div class="relative h-64 overflow-hidden group">
+                        <img src="https://images.unsplash.com/photo-1541167760496-1628856ab772?auto=format&fit=crop&q=80&w=600" 
+                             alt="ハンドドリップコーヒー" 
+                             class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                             onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%25%22 height=%22100%25%22 viewBox=%220 0 100 100%22><rect width=%22100%25%22 height=%22100%25%22 fill=%22%23B89774%22/></svg>';">
+                        <span class="absolute top-4 right-4 bg-cafe-900 bg-opacity-75 text-cafe-200 text-xs px-3 py-1 rounded-full font-semibold">Specialty</span>
+                    </div>
+                    <div class="p-6 space-y-4">
+                        <div class="flex justify-between items-baseline">
+                            <h3 class="font-serif text-lg font-bold">ドリップコーヒー (ローブ・ブレンド)</h3>
+                            <span class="text-cafe-600 font-semibold font-serif">¥550</span>
+                        </div>
+                        <p class="text-xs text-cafe-600 leading-relaxed font-light">
+                            自家焙煎した中深煎りのシグネチャーブレンド。華やかなフルーティさとココアのような心地よい余韻。
+                        </p>
+                        <div class="flex items-center space-x-2 text-[10px] text-cafe-400 font-semibold tracking-wider uppercase">
+                            <span>Hot / Iced</span>
+                            <span>•</span>
+                            <span>Organic Beans</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ドリンク 2 -->
+                <div class="menu-item bg-cafe-50 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1" data-category="drinks">
+                    <div class="relative h-64 overflow-hidden group">
+                        <img src="https://images.unsplash.com/photo-1570968915860-54d5c301fc9f?auto=format&fit=crop&q=80&w=600" 
+                             alt="カフェラテ" 
+                             class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                             onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%25%22 height=%22100%25%22 viewBox=%220 0 100 100%22><rect width=%22100%25%22 height=%22100%25%22 fill=%22%23B89774%22/></svg>';">
+                    </div>
+                    <div class="p-6 space-y-4">
+                        <div class="flex justify-between items-baseline">
+                            <h3 class="font-serif text-lg font-bold">カフェラテ</h3>
+                            <span class="text-cafe-600 font-semibold font-serif">¥600</span>
+                        </div>
+                        <p class="text-xs text-cafe-600 leading-relaxed font-light">
+                            濃厚なエスプレッソとスチームミルクの甘みが織りなす、シルキーでマイルドな味わい。ラテアートを添えて。
+                        </p>
+                        <div class="flex items-center space-x-2 text-[10px] text-cafe-400 font-semibold tracking-wider uppercase">
+                            <span>Hot / Iced</span>
+                            <span>•</span>
+                            <span>Oat Milk (+¥50)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- フード 1 -->
+                <div class="menu-item bg-cafe-50 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1" data-category="food">
+                    <div class="relative h-64 overflow-hidden group">
+                        <img src="https://images.unsplash.com/photo-1541532713592-79a0317b6b77?auto=format&fit=crop&q=80&w=600" 
+                             alt="アボカドトースト" 
+                             class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                             onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%25%22 height=%22100%25%22 viewBox=%220 0 100 100%22><rect width=%22100%25%22 height=%22100%25%22 fill=%22%23B89774%22/></svg>';">
+                        <span class="absolute top-4 right-4 bg-leaf-light text-white text-xs px-3 py-1 rounded-full font-semibold">Vegan Option</span>
+                    </div>
+                    <div class="p-6 space-y-4">
+                        <div class="flex justify-between items-baseline">
+                            <h3 class="font-serif text-lg font-bold">アボカドサワードウトースト</h3>
+                            <span class="text-cafe-600 font-semibold font-serif">¥1,100</span>
+                        </div>
+                        <p class="text-xs text-cafe-600 leading-relaxed font-light">
+                            自家製天然酵母パンに、完熟アボカド、マイクログリーン、チリフレークをトッピング。ライムの爽やかな香り。
+                        </p>
+                        <div class="flex items-center space-x-2 text-[10px] text-cafe-400 font-semibold tracking-wider uppercase">
+                            <span>Breakfast / Lunch</span>
+                            <span>•</span>
+                            <span>Fresh Ingredients</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- フード 2 -->
+                <div class="menu-item bg-cafe-50 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1" data-category="food">
+                    <div class="relative h-64 overflow-hidden group">
+                        <img src="https://images.unsplash.com/photo-1513442542250-854d436a73f2?auto=format&fit=crop&q=80&w=600" 
+                             alt="フレンチトースト" 
+                             class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                             onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%25%22 height=%22100%25%22 viewBox=%220 0 100 100%22><rect width=%22100%25%22 height=%22100%25%22 fill=%22%23B89774%22/></svg>';">
+                    </div>
+                    <div class="p-6 space-y-4">
+                        <div class="flex justify-between items-baseline">
+                            <h3 class="font-serif text-lg font-bold">極厚ブリオッシュフレンチトースト</h3>
+                            <span class="text-cafe-600 font-semibold font-serif">¥1,200</span>
+                        </div>
+                        <p class="text-xs text-cafe-600 leading-relaxed font-light">
+                            バニラとラム酒をきかせたリッチな卵液に一晩じっくり浸し、外はカリッと、中はプルプルに焼き上げました。
+                        </p>
+                        <div class="flex items-center space-x-2 text-[10px] text-cafe-400 font-semibold tracking-wider uppercase">
+                            <span>Sweet Breakfast</span>
+                            <span>•</span>
+                            <span>Maple Syrup</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- デザート 1 -->
+                <div class="menu-item bg-cafe-50 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1" data-category="dessert">
+                    <div class="relative h-64 overflow-hidden group">
+                        <img src="https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&q=80&w=600" 
+                             alt="クラシックプリン" 
+                             class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                             onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%25%22 height=%22100%25%22 viewBox=%220 0 100 100%22><rect width=%22100%25%22 height=%22100%25%22 fill=%22%23B89774%22/></svg>';">
+                        <span class="absolute top-4 right-4 bg-cafe-900 bg-opacity-75 text-cafe-200 text-xs px-3 py-1 rounded-full font-semibold">Popular</span>
+                    </div>
+                    <div class="p-6 space-y-4">
+                        <div class="flex justify-between items-baseline">
+                            <h3 class="font-serif text-lg font-bold">クラシックカスタードプリン</h3>
+                            <span class="text-cafe-600 font-semibold font-serif">¥650</span>
+                        </div>
+                        <p class="text-xs text-cafe-600 leading-relaxed font-light">
+                            卵のコクをしっかり感じられる、どこか懐かしい少し固めのクラシックプリン。ほろ苦いカラメルソースと。
+                        </p>
+                        <div class="flex items-center space-x-2 text-[10px] text-cafe-400 font-semibold tracking-wider uppercase">
+                            <span>Egg-rich</span>
+                            <span>•</span>
+                            <span>Homemade</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- デザート 2 -->
+                <div class="menu-item bg-cafe-50 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1" data-category="dessert">
+                    <div class="relative h-64 overflow-hidden group">
+                        <img src="https://images.unsplash.com/photo-1587314168485-3236d6710814?auto=format&fit=crop&q=80&w=600" 
+                             alt="バスクチーズケーキ" 
+                             class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                             onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%25%22 height=%22100%25%22 viewBox=%220 0 100 100%22><rect width=%22100%25%22 height=%22100%25%22 fill=%22%23B89774%22/></svg>';">
+                    </div>
+                    <div class="p-6 space-y-4">
+                        <div class="flex justify-between items-baseline">
+                            <h3 class="font-serif text-lg font-bold">プレミアム・バスクチーズケーキ</h3>
+                            <span class="text-cafe-600 font-semibold font-serif">¥700</span>
+                        </div>
+                        <p class="text-xs text-cafe-600 leading-relaxed font-light">
+                            濃厚な北海道産クリームチーズをたっぷり使用し、高温で一気に焼き上げました。中はとろりとクリーミー。
+                        </p>
+                        <div class="flex items-center space-x-2 text-[10px] text-cafe-400 font-semibold tracking-wider uppercase">
+                            <span>Rich Cream Cheese</span>
+                            <span>•</span>
+                            <span>Gluten-free</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- フォトギャラリーセクション -->
+    <section id="gallery" class="py-24 md:py-32 bg-cafe-50">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center max-w-2xl mx-auto mb-16 space-y-4">
+                <span class="text-xs uppercase tracking-[0.3em] font-semibold text-cafe-500">The Space & Vibe</span>
+                <h2 class="font-serif text-3xl md:text-4xl font-bold tracking-wider">ギャラリー</h2>
+                <div class="w-12 h-0.5 bg-cafe-400 mx-auto"></div>
+                <p class="text-cafe-600 font-light text-sm md:text-base">
+                    木漏れ日、音楽、豊かな香り。五感で楽しむリラックスした空間を提供します。
+                </p>
+            </div>
+
+            <!-- モザイクギャラリー -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="rounded-2xl overflow-hidden shadow-md group relative h-48 md:h-72">
+                    <img src="https://images.unsplash.com/photo-1521017432531-fbd92d768814?auto=format&fit=crop&q=80&w=400" 
+                         alt="窓際の席" 
+                         class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                         onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%25%22 height=%22100%25%22 viewBox=%220 0 100 100%22><rect width=%22100%25%22 height=%22100%25%22 fill=%22%23B89774%22/></svg>';">
+                    <div class="absolute inset-0 bg-black bg-opacity-20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
+                        <span class="text-white font-medium text-xs tracking-wider">Window Side Seat</span>
+                    </div>
+                </div>
+                <div class="rounded-2xl overflow-hidden shadow-md group relative h-48 md:h-72 md:translate-y-4">
+                    <img src="https://images.unsplash.com/photo-1511920170033-f8396924c348?auto=format&fit=crop&q=80&w=400" 
+                         alt="ドリップコーヒーの準備" 
+                         class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                         onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%25%22 height=%22100%25%22 viewBox=%220 0 100 100%22><rect width=%22100%25%22 height=%22100%25%22 fill=%22%23D5C3A6%22/></svg>';">
+                    <div class="absolute inset-0 bg-black bg-opacity-20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
+                        <span class="text-white font-medium text-xs tracking-wider">Brewing Craft</span>
+                    </div>
+                </div>
+                <div class="rounded-2xl overflow-hidden shadow-md group relative h-48 md:h-72">
+                    <img src="https://images.unsplash.com/photo-1453614512568-c4024d13c247?auto=format&fit=crop&q=80&w=400" 
+                         alt="バーカウンター" 
+                         class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                         onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%25%22 height=%22100%25%22 viewBox=%220 0 100 100%22><rect width=%22100%25%22 height=%22100%25%22 fill=%22%23E5DEC9%22/></svg>';">
+                    <div class="absolute inset-0 bg-black bg-opacity-20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
+                        <span class="text-white font-medium text-xs tracking-wider">Main Bar Counter</span>
+                    </div>
+                </div>
+                <div class="rounded-2xl overflow-hidden shadow-md group relative h-48 md:h-72 md:translate-y-4">
+                    <img src="https://images.unsplash.com/photo-1549692520-acc6669e2f0c?auto=format&fit=crop&q=80&w=400" 
+                         alt="焼き菓子のディスプレイ" 
+                         class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                         onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%25%22 height=%22100%25%22 viewBox=%220 0 100 100%22><rect width=%22100%25%22 height=%22100%25%22 fill=%22%23FAF8F5%22/></svg>';">
+                    <div class="absolute inset-0 bg-black bg-opacity-20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
+                        <span class="text-white font-medium text-xs tracking-wider">Freshly Baked Goods</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- インフォメーション ＆ アクセス -->
+    <section id="access" class="py-24 md:py-32 bg-white">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+                
+                <!-- 地図 / ビジュアル (モック) -->
+                <div class="rounded-2xl overflow-hidden shadow-xl h-[350px] md:h-[450px] relative bg-cafe-100 border border-cafe-200">
+                    <!-- Google Mapのプレースホルダー風にスタイリングされた美しいSVG地図イラスト -->
+                    <div class="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
+                        <svg class="w-16 h-16 text-cafe-500 mb-4 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        </svg>
+                        <h4 class="font-serif text-lg font-bold mb-2">Café de L'Aube</h4>
+                        <p class="text-xs text-cafe-600 font-light max-w-sm leading-relaxed mb-4">
+                            東京都渋谷区神宮前 1-2-3 (Jingumae, Shibuya-ku, Tokyo)<br>
+                            原宿駅 徒歩5分 / 明治神宮前駅 徒歩3分
+                        </p>
+                        <a href="https://maps.google.com" target="_blank" rel="noopener noreferrer" class="bg-white hover:bg-cafe-900 hover:text-white text-cafe-800 text-xs font-semibold px-6 py-3 rounded-full shadow transition-all duration-300 border border-cafe-200">
+                            Google Mapsでルートを調べる
+                        </a>
+                    </div>
+                    <!-- 背景の抽象パターン -->
+                    <svg class="w-full h-full opacity-10" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
+                        <defs>
+                            <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                                <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#2A1A12" stroke-width="1"/>
+                            </pattern>
+                        </defs>
+                        <rect width="100%" height="100%" fill="url(#grid)" />
+                    </svg>
+                </div>
+
+                <!-- 店舗情報テキスト -->
+                <div class="space-y-8">
+                    <div class="space-y-3">
+                        <span class="text-xs uppercase tracking-[0.3em] font-semibold text-cafe-500">Access & Info</span>
+                        <h2 class="font-serif text-3xl md:text-4xl font-bold tracking-wider">アクセス ＆ 営業時間</h2>
+                    </div>
+                    <div class="w-16 h-1 bg-cafe-400"></div>
+
+                    <div class="space-y-6">
+                        <!-- 住所 -->
+                        <div class="flex items-start space-x-4">
+                            <span class="p-2 bg-cafe-50 text-cafe-600 rounded-lg">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                            </span>
+                            <div>
+                                <h3 class="font-medium text-xs uppercase tracking-wider text-cafe-400 mb-1">Address</h3>
+                                <p class="text-sm text-cafe-900 leading-relaxed font-serif font-semibold">
+                                    〒150-0001 東京都渋谷区神宮前 1-2-3
+                                </p>
+                                <p class="text-xs text-cafe-500 font-light mt-0.5">※ 専用駐車場はございませんので、近隣のコインパーキングをご利用ください。</p>
+                            </div>
+                        </div>
+
+                        <!-- 営業時間 -->
+                        <div class="flex items-start space-x-4">
+                            <span class="p-2 bg-cafe-50 text-cafe-600 rounded-lg">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            </span>
+                            <div>
+                                <h3 class="font-medium text-xs uppercase tracking-wider text-cafe-400 mb-1">Opening Hours</h3>
+                                <p class="text-sm text-cafe-900 leading-relaxed font-serif font-semibold">
+                                    月曜 - 金曜: 8:00 — 19:00 (L.O. 18:30)<br>
+                                    土曜 - 日曜 / 祝日: 9:00 — 20:00 (L.O. 19:30)
+                                </p>
+                                <p class="text-xs text-cafe-500 font-light mt-1">定休日: 毎月第2火曜日</p>
+                            </div>
+                        </div>
+
+                        <!-- お問い合わせ -->
+                        <div class="flex items-start space-x-4">
+                            <span class="p-2 bg-cafe-50 text-cafe-600 rounded-lg">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.94.725l.548 2.2a1 1 0 01-.321.988l-1.305.98a10.582 10.582 0 004.872 4.872l.98-1.305a1 1 0 01.988-.321l2.2.548a1 1 0 01.725.94V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>
+                            </span>
+                            <div>
+                                <h3 class="font-medium text-xs uppercase tracking-wider text-cafe-400 mb-1">Contact</h3>
+                                <p class="text-sm text-cafe-900 font-serif font-semibold">03-1234-5678</p>
+                                <p class="text-xs text-cafe-500 font-light mt-0.5">info@cafedelaube.com</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- お問い合わせ・席のご予約 (Reservation/Contact Form) -->
+    <section id="reservation" class="py-24 md:py-32 bg-cafe-100">
+        <div class="max-w-4xl mx-auto px-6">
+            <div class="bg-white rounded-3xl shadow-xl overflow-hidden p-8 md:p-12 space-y-8 relative">
+                
+                <!-- 美しいトップデコレーションライン -->
+                <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-cafe-300 via-cafe-500 to-cafe-400"></div>
+
+                <div class="text-center max-w-xl mx-auto space-y-3">
+                    <span class="text-xs uppercase tracking-[0.3em] font-semibold text-cafe-500">Book a Table</span>
+                    <h2 class="font-serif text-2xl md:text-3xl font-bold tracking-wider">オンライン席のご予約・お問い合わせ</h2>
+                    <p class="text-xs text-cafe-500 font-light leading-relaxed">
+                        当日のご予約はお電話にて承ります。フォームからのご予約は、確認完了メールをもって確定とさせていただきます。
+                    </p>
+                </div>
+
+                <!-- フォーム本体 -->
+                <form id="reservation-form" onsubmit="handleFormSubmit(event)" class="space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- お名前 -->
+                        <div class="space-y-1">
+                            <label for="name" class="block text-xs font-semibold uppercase tracking-wider text-cafe-600">お名前 <span class="text-red-500">*</span></label>
+                            <input type="text" id="name" required placeholder="山田 太郎" class="w-full px-4 py-3 rounded-xl border border-cafe-200 focus:outline-none focus:ring-2 focus:ring-cafe-400 text-sm transition-all bg-cafe-50">
+                        </div>
+                        <!-- メールアドレス -->
+                        <div class="space-y-1">
+                            <label for="email" class="block text-xs font-semibold uppercase tracking-wider text-cafe-600">メールアドレス <span class="text-red-500">*</span></label>
+                            <input type="email" id="email" required placeholder="your@email.com" class="w-full px-4 py-3 rounded-xl border border-cafe-200 focus:outline-none focus:ring-2 focus:ring-cafe-400 text-sm transition-all bg-cafe-50">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <!-- ご来店日 -->
+                        <div class="space-y-1">
+                            <label for="date" class="block text-xs font-semibold uppercase tracking-wider text-cafe-600">ご希望日</label>
+                            <input type="date" id="date" class="w-full px-4 py-3 rounded-xl border border-cafe-200 focus:outline-none focus:ring-2 focus:ring-cafe-400 text-sm transition-all bg-cafe-50">
+                        </div>
+                        <!-- ご来店時間 -->
+                        <div class="space-y-1">
+                            <label for="time" class="block text-xs font-semibold uppercase tracking-wider text-cafe-600">ご希望時間</label>
+                            <select id="time" class="w-full px-4 py-3 rounded-xl border border-cafe-200 focus:outline-none focus:ring-2 focus:ring-cafe-400 text-sm transition-all bg-cafe-50">
+                                <option value="">時間を選択してください</option>
+                                <option value="09:00">09:00 — 11:00 (モーニング)</option>
+                                <option value="11:30">11:30 — 14:00 (ランチ)</option>
+                                <option value="14:00">14:00 — 17:00 (ティータイム)</option>
+                                <option value="17:00">17:00 — 19:00 (ディナー)</option>
+                            </select>
+                        </div>
+                        <!-- 人数 -->
+                        <div class="space-y-1">
+                            <label for="guests" class="block text-xs font-semibold uppercase tracking-wider text-cafe-600">人数</label>
+                            <select id="guests" class="w-full px-4 py-3 rounded-xl border border-cafe-200 focus:outline-none focus:ring-2 focus:ring-cafe-400 text-sm transition-all bg-cafe-50">
+                                <option value="1">1名様</option>
+                                <option value="2" selected>2名様</option>
+                                <option value="3">3名様</option>
+                                <option value="4">4名様</option>
+                                <option value="5">5名様以上 (要望欄に記載ください)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- メッセージ / 要望 -->
+                    <div class="space-y-1">
+                        <label for="message" class="block text-xs font-semibold uppercase tracking-wider text-cafe-600">アレルギー要望・お問い合わせ内容</label>
+                        <textarea id="message" rows="4" placeholder="ご要望やアレルギー情報、またはお問い合わせ内容がございましたらご記入ください。" class="w-full px-4 py-3 rounded-xl border border-cafe-200 focus:outline-none focus:ring-2 focus:ring-cafe-400 text-sm transition-all bg-cafe-50"></textarea>
+                    </div>
+
+                    <!-- プライバシーへの承諾 -->
+                    <div class="flex items-start space-x-3 pt-2">
+                        <input type="checkbox" id="privacy" required class="mt-1 h-4 w-4 rounded border-cafe-300 text-cafe-600 focus:ring-cafe-400">
+                        <label for="privacy" class="text-xs text-cafe-500 font-light leading-normal cursor-pointer select-none">
+                            個人情報の取り扱いに同意の上、送信します。ご送信いただいた情報は席の予約管理およびお問い合わせ対応のみに利用いたします。
+                        </label>
+                    </div>
+
+                    <!-- 送信ボタン -->
+                    <div class="text-center pt-4">
+                        <button type="submit" class="w-full sm:w-auto bg-cafe-600 hover:bg-cafe-700 text-white font-medium px-12 py-4 rounded-full transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 tracking-wider text-sm">
+                            ご予約・メッセージを送信する
+                        </button>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- フッター -->
+    <footer class="bg-cafe-900 text-cafe-100 pt-16 pb-8">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-12 pb-16 border-b border-cafe-800">
+                
+                <!-- カフェ紹介 (5/12) -->
+                <div class="md:col-span-5 space-y-6">
+                    <a href="#" class="flex flex-col items-start group">
+                        <span class="font-serif text-2xl font-bold tracking-widest text-white">Café de L'Aube</span>
+                        <span class="text-[9px] tracking-[0.25em] text-cafe-300 uppercase mt-0.5">Organic & Specialty Coffee</span>
+                    </a>
+                    <p class="text-xs text-cafe-300 leading-relaxed font-light max-w-sm">
+                        Café de L'Aube は、オーガニック素材と自家焙煎のスペシャルティコーヒーにこだわったサードウェーブカフェです。心地よい音楽と上質な香りで包まれた、贅沢な一杯をお楽しみください。
+                    </p>
+                    <!-- SNSリンク -->
+                    <div class="flex space-x-4 pt-2 text-cafe-300">
+                        <a href="#" class="hover:text-white transition-colors duration-300" aria-label="Instagram">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.051.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+                        </a>
+                        <a href="#" class="hover:text-white transition-colors duration-300" aria-label="Facebook">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z"/></svg>
+                        </a>
+                        <a href="#" class="hover:text-white transition-colors duration-300" aria-label="X (formerly Twitter)">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- リンク (3/12) -->
+                <div class="md:col-span-3 space-y-4">
+                    <h4 class="font-serif font-bold text-white tracking-wider text-sm">Navigation</h4>
+                    <ul class="space-y-2.5 text-xs text-cafe-300 font-light">
+                        <li><a href="#about" class="hover:text-white transition-colors">わたしたちについて (About)</a></li>
+                        <li><a href="#menu" class="hover:text-white transition-colors">お食事メニュー (Menu)</a></li>
+                        <li><a href="#gallery" class="hover:text-white transition-colors">写真ギャラリー (Gallery)</a></li>
+                        <li><a href="#access" class="hover:text-white transition-colors">アクセス ＆ 営業時間 (Access)</a></li>
+                    </ul>
+                </div>
+
+                <!-- インフォメーション (4/12) -->
+                <div class="md:col-span-4 space-y-4">
+                    <h4 class="font-serif font-bold text-white tracking-wider text-sm">Contact Info</h4>
+                    <p class="text-xs text-cafe-300 leading-relaxed font-light">
+                        〒150-0001 東京都渋谷区神宮前 1-2-3<br>
+                        Tel: 03-1234-5678<br>
+                        Email: info@cafedelaube.com
+                    </p>
+                    <p class="text-[10px] text-cafe-400 font-light leading-relaxed">
+                        ※取材のご依頼やコラボレーション等のお問い合わせもメールにて承っております。
+                    </p>
+                </div>
+
+            </div>
+
+            <!-- コピーライト -->
+            <div class="pt-8 flex flex-col sm:flex-row justify-between items-center text-[11px] text-cafe-400 font-light space-y-4 sm:space-y-0">
+                <p>© 2026 Café de L'Aube. All Rights Reserved.</p>
+                <div class="flex space-x-6">
+                    <a href="#" class="hover:text-white transition-colors">プライバシーポリシー</a>
+                    <a href="#" class="hover:text-white transition-colors">利用規約</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- カスタムモーダル（ご予約完了通知） -->
+    <div id="success-modal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 opacity-0 pointer-events-none transition-opacity duration-300">
+        <div class="bg-white rounded-3xl p-8 max-w-md w-full mx-6 text-center shadow-2xl transform scale-95 transition-transform duration-300 relative space-y-6" id="modal-content">
+            <!-- チェックアイコン -->
+            <div class="w-16 h-16 bg-cafe-100 text-cafe-600 rounded-full flex items-center justify-center mx-auto shadow-inner">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+            </div>
+            
+            <div class="space-y-2">
+                <h3 class="font-serif text-xl md:text-2xl font-bold text-cafe-900">送信が完了しました</h3>
+                <p class="text-xs text-cafe-500 leading-relaxed" id="modal-message-text">
+                    Café de L'Aube へのお問い合わせありがとうございます。<br>ご入力いただいたメールアドレス宛に自動返信メールをお送りいたしました。
+                </p>
+            </div>
+
+            <!-- 予約詳細モックのサマリー -->
+            <div id="reservation-summary" class="bg-cafe-50 rounded-2xl p-4 text-left text-xs space-y-2 hidden">
+                <p class="font-semibold text-cafe-700 text-center border-b border-cafe-100 pb-1.5 mb-1.5">ご予約内容控え</p>
+                <div class="flex justify-between">
+                    <span class="text-cafe-400">お名前:</span>
+                    <span id="summary-name" class="font-medium text-cafe-800"></span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-cafe-400">日時:</span>
+                    <span id="summary-datetime" class="font-medium text-cafe-800"></span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-cafe-400">人数:</span>
+                    <span id="summary-guests" class="font-medium text-cafe-800"></span>
+                </div>
+            </div>
+
+            <div>
+                <button onclick="closeSuccessModal()" class="w-full bg-cafe-600 hover:bg-cafe-700 text-white font-medium py-3 rounded-full transition-all duration-300 text-sm shadow-md">
+                    閉じる
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- インタラクティブJavaScript -->
+    <script>
+        // ------------------------------------------
+        // 1. スクロールに応じたヘッダースタイルの変更
+        // ------------------------------------------
+        const header = document.getElementById('main-header');
+        const logoText = document.getElementById('header-logo-text');
+        const subText = document.getElementById('header-sub-text');
+        const desktopNav = document.getElementById('desktop-nav');
+        const hamburgerIcon = document.getElementById('hamburger-icon');
+        const closeIcon = document.getElementById('close-icon');
+
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 50) {
+                // スクロール時のスタイル (ホワイト背景・ダーク文字)
+                header.classList.remove('bg-transparent', 'py-5');
+                header.classList.add('bg-white', 'py-3.5', 'shadow-md', 'border-b', 'border-cafe-100');
+                logoText.classList.remove('text-white');
+                logoText.classList.add('text-cafe-900');
+                subText.classList.remove('text-cafe-100');
+                subText.classList.add('text-cafe-500');
+                desktopNav.classList.remove('text-white');
+                desktopNav.classList.add('text-cafe-800');
+                hamburgerIcon.classList.remove('text-white');
+                hamburgerIcon.classList.add('text-cafe-800');
+                closeIcon.classList.remove('text-white');
+                closeIcon.classList.add('text-cafe-800');
+            } else {
+                // 初期スタイル (透明背景・白文字)
+                header.classList.add('bg-transparent', 'py-5');
+                header.classList.remove('bg-white', 'py-3.5', 'shadow-md', 'border-b', 'border-cafe-100');
+                logoText.classList.add('text-white');
+                logoText.classList.remove('text-cafe-900');
+                subText.classList.add('text-cafe-100');
+                subText.classList.remove('text-cafe-500');
+                desktopNav.classList.add('text-white');
+                desktopNav.classList.remove('text-cafe-800');
+                hamburgerIcon.classList.add('text-white');
+                hamburgerIcon.classList.remove('text-cafe-800');
+                closeIcon.classList.add('text-white');
+                closeIcon.classList.remove('text-cafe-800');
+            }
+        });
+
+        // ------------------------------------------
+        // 2. モバイルドロワーメニューのトグル
+        // ------------------------------------------
+        const menuToggleBtn = document.getElementById('menu-toggle-btn');
+        const mobileMenu = document.getElementById('mobile-menu');
+
+        menuToggleBtn.addEventListener('click', () => {
+            const isOpen = !mobileMenu.classList.contains('translate-x-full');
+            if (isOpen) {
+                // メニューを閉じる
+                mobileMenu.classList.add('translate-x-full');
+                hamburgerIcon.classList.remove('hidden');
+                closeIcon.classList.add('hidden');
+                document.body.style.overflow = ''; // スクロール有効化
+            } else {
+                // メニューを開く
+                mobileMenu.classList.remove('translate-x-full');
+                hamburgerIcon.classList.add('hidden');
+                closeIcon.classList.remove('hidden');
+                document.body.style.overflow = 'hidden'; // 背後のスクロール防止
+            }
+        });
+
+        // リンクをクリックした際にモバイルドロワーを自動で閉じる
+        const mobileLinks = mobileMenu.querySelectorAll('a');
+        mobileLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                mobileMenu.classList.add('translate-x-full');
+                hamburgerIcon.classList.remove('hidden');
+                closeIcon.classList.add('hidden');
+                document.body.style.overflow = '';
+            });
+        });
+
+
+        // ------------------------------------------
+        // 3. メニューフィルタ機能
+        // ------------------------------------------
+        function switchTab(category) {
+            // 全てのタブボタンのスタイルを一度リセット
+            const tabs = document.querySelectorAll('.menu-tab');
+            tabs.forEach(tab => {
+                tab.classList.remove('bg-cafe-600', 'text-white', 'shadow-md');
+                tab.classList.add('text-cafe-700', 'hover:bg-cafe-100');
+            });
+
+            // 選択したタブのアクティブスタイルを設定
+            const activeTab = document.getElementById(`tab-${category}`);
+            activeTab.classList.remove('text-cafe-700', 'hover:bg-cafe-100');
+            activeTab.classList.add('bg-cafe-600', 'text-white', 'shadow-md');
+
+            // グリッド要素のフィルタリング
+            const menuItems = document.querySelectorAll('.menu-item');
+            menuItems.forEach(item => {
+                // 一旦フェードアウトさせる演出
+                item.style.opacity = '0';
+                item.style.transform = 'scale(0.95)';
+                
+                setTimeout(() => {
+                    const itemCategory = item.getAttribute('data-category');
+                    if (category === 'all' || itemCategory === category) {
+                        item.classList.remove('hidden');
+                        setTimeout(() => {
+                            item.style.opacity = '1';
+                            item.style.transform = 'scale(1)';
+                        }, 50);
+                    } else {
+                        item.classList.add('hidden');
+                    }
+                }, 200);
+            });
+        }
+
+
+        // ------------------------------------------
+        // 4. 予約・お問合せフォーム送信処理（カスタムモーダル）
+        // ------------------------------------------
+        const successModal = document.getElementById('success-modal');
+        const modalContent = document.getElementById('modal-content');
+        const modalMessageText = document.getElementById('modal-message-text');
+        const reservationSummary = document.getElementById('reservation-summary');
+        const summaryName = document.getElementById('summary-name');
+        const summaryDatetime = document.getElementById('summary-datetime');
+        const summaryGuests = document.getElementById('summary-guests');
+
+        function handleFormSubmit(event) {
+            event.preventDefault(); // 通常の送信リロードを防ぐ
+
+            // フォームから値を取得
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const date = document.getElementById('date').value;
+            const time = document.getElementById('time').value;
+            const guests = document.getElementById('guests').value;
+            const message = document.getElementById('message').value;
+
+            // フォーム入力情報をモーダルに反映
+            if (date && time) {
+                // 席予約の場合
+                modalMessageText.innerHTML = `
+                    Café de L'Aube をご予約いただき、誠にありがとうございます！<br>
+                    ただいまご入力いただいた内容を反映した仮予約確認メールを <strong>${email}</strong> 宛に送信いたしました。<br>
+                    内容確認の上、24時間以内にご連絡させていただきます。
+                `;
+                
+                // 予約サマリーを表示
+                summaryName.textContent = name + " 様";
+                summaryDatetime.textContent = `${date} ${time}`;
+                summaryGuests.textContent = guests + "名様";
+                reservationSummary.classList.remove('hidden');
+            } else {
+                // 一般のお問い合わせの場合
+                modalMessageText.innerHTML = `
+                    Café de L'Aube へのお問い合わせありがとうございます！<br>
+                    ご記入いただいた内容を送信いたしました。担当スタッフより <strong>${email}</strong> 宛に近日中にご連絡させていただきます。
+                `;
+                // 予約サマリーは非表示に
+                reservationSummary.classList.add('hidden');
+            }
+
+            // モーダルを開くアニメーション
+            successModal.classList.remove('pointer-events-none', 'opacity-0');
+            successModal.classList.add('opacity-100');
+            modalContent.classList.remove('scale-95');
+            modalContent.classList.add('scale-100');
+
+            // フォームのリセット
+            document.getElementById('reservation-form').reset();
+        }
+
+        function closeSuccessModal() {
+            // モーダルを閉じるアニメーション
+            successModal.classList.add('pointer-events-none', 'opacity-0');
+            successModal.classList.remove('opacity-100');
+            modalContent.classList.add('scale-95');
+            modalContent.classList.remove('scale-100');
+        }
+
+        // モーダル背景クリックでも閉じるようにする
+        successModal.addEventListener('click', (e) => {
+            if (e.target === successModal) {
+                closeSuccessModal();
+            }
+        });
+    </script>
+</body>
+</html>
